@@ -1,0 +1,15 @@
+#=========================================================
+# OpenShift template parameters for:
+# Component: .
+# Template File: templates/hub-api/hub-api-deploy.yaml
+#=========================================================
+# NAME=hub-api
+APPLICATION_DOMAIN=hub-api-news-prod.pathfinder.gov.bc.ca
+# IMAGE_NAMESPACE=hub-tools
+# SOURCE_IMAGE_NAME=hub-api
+TAG_NAME=prod
+# ASPNETCORE_ENVIRONMENT=Production
+# CPU_LIMIT=1
+# MEMORY_LIMIT=4Gi
+# CPU_REQUEST=100m
+# MEMORY_REQUEST=2Gi
