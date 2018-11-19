@@ -97,7 +97,7 @@ parameters:
     displayName: DotNet Startup Project
     description: The path to the startup project for the .Net application.
     required: true
-    value: Gcpe.Hub.API/Gcpe.Hub.API
+    value: Gcpe.Hub.API
   - name: DOTNET_TEST_PROJECTS
     displayName: DotNet Test Project(s)
     description: >-
@@ -106,7 +106,7 @@ parameters:
       for each item.
     required: true
     value: |-
-      Gcpe.Hub.API/Gcpe.Hub.API.Tests Gcpe.Hub.API/Gcpe.Hub.API.IntegrationTests
+      Gcpe.Hub.API.Tests Gcpe.Hub.API.IntegrationTests
   - name: DOTNET_RM_SRC
     displayName: Remove DotNet source code
     description:
