@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Gcpe.Hub.API/Gcpe.Hub.API/Gcpe.Hub.API.csproj"
+                "${workspaceFolder}/Gcpe.Hub.API/Gcpe.Hub.API.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
