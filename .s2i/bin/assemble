@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# S2I Assemble Script
+#
+# This script is based on the S2I assemble script for dotnet 2.1, with the following extra features:
+#
+# 1. A Sonarqube scan can be done on the source
+# 2. A Snyk scan can be done on the source
+# 3. Dotnet tests can be done
+# 4. Or a regular build for production of an application image can be done.
+
+echo "Before assembling"
+
+# run original assemble...
+$STI_SCRIPTS_PATH/assemble
+rc=$?
+
+if [ $rc -eq 0 ]; then
+  echo "After successful assembling"
+  # TODO: SonarQube
+  # TODO: ZAP
+  # TODO: Snyk
+else
+  echo "After failed assembling"
+fi
+
+exit $rc
