@@ -1,15 +1,14 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Gcpe.Hub.API.Data;
+using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
-using FluentAssertions;
-using Newtonsoft.Json;
 using Moq;
-using Gcpe.Hub.API.Helpers;
-using Gcpe.Hub.API;
-using Gcpe.Hub.API.Data;
+using Newtonsoft.Json;
+using Xunit;
 
 namespace Gcpe.Hub.API.IntegrationTests
 {

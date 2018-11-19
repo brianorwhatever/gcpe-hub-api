@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Bogus;
-using Gcpe.Hub.API.Helpers;
+using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.IntegrationTests
 {
@@ -28,11 +28,11 @@ namespace Gcpe.Hub.API.IntegrationTests
                 IsPublished = f.PickRandom(new bool[] { true, true, false }),
                 IsActive = f.PickRandom(new bool[] { true, true, false }),
                 IsCommitted = f.PickRandom(new bool[] { true, true, false }),
-                Logs = CreateNewsReleaseLogCollection(f.Random.Number(1, 5))
+                NewsReleaseLog = CreateNewsReleaseLogCollection(f.Random.Number(1, 5))
             };
 
             // Link children to parent object
-            foreach (var x in release.Logs)
+            foreach (var x in release.NewsReleaseLog)
             {
                 x.ReleaseId = release.Id;
             }

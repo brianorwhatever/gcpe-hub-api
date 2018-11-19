@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.API.Stubs;
+using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.Data
 {

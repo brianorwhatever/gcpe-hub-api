@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Linq;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Xunit;
-using Moq;
 using FluentAssertions;
-using Gcpe.Hub.API.Data;
 using Gcpe.Hub.API.Controllers;
+using Gcpe.Hub.API.Data;
 using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.API.ViewModels;
+using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace Gcpe.Hub.API.Tests.ControllerTests
 {

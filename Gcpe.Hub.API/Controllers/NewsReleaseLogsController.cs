@@ -2,8 +2,8 @@
 using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.API.Data;
-using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.API.ViewModels;
+using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -32,7 +32,7 @@ namespace Gcpe.Hub.API.Controllers
             var release = _repository.GetReleaseByKey(newsReleaseId);
             if (release != null)
             {
-                return Ok(_mapper.Map<IEnumerable<NewsReleaseLog>, IEnumerable<NewsReleaseLogViewModel>>(release.Logs));
+                return Ok(_mapper.Map<IEnumerable<NewsReleaseLog>, IEnumerable<NewsReleaseLogViewModel>>(release.NewsReleaseLog));
             }
             return NotFound();
         }
@@ -43,7 +43,7 @@ namespace Gcpe.Hub.API.Controllers
             var release = _repository.GetReleaseByKey(newsReleaseId);
             if (release != null)
             {
-                var log = release.Logs.Where(i => i.Id == id).FirstOrDefault();
+                var log = release.NewsReleaseLog.Where(i => i.Id == id).FirstOrDefault();
                 if (log != null)
                 {
                     return Ok(_mapper.Map<NewsReleaseLog, NewsReleaseLogViewModel>(log));

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Gcpe.Hub.API.Helpers;
+using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.ViewModels
 {

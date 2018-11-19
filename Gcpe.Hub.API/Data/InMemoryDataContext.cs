@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.API.Stubs;
+using Gcpe.Hub.Data.Entity;
 using NLipsum.Core;
 
 namespace Gcpe.Hub.API.Data
@@ -125,7 +125,7 @@ namespace Gcpe.Hub.API.Data
                     IsActive = true,
                     IsCommitted = true,
                     Keywords = "lorem, ipsum, dolor",
-                    Logs = new List<NewsReleaseLog>
+                    NewsReleaseLog = new List<NewsReleaseLog>
                     {
                         new NewsReleaseLog
                         {

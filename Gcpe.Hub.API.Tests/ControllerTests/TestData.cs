@@ -1,6 +1,6 @@
-﻿using Gcpe.Hub.API.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.Tests.ControllerTests
 {
@@ -28,7 +28,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                         IsActive = true,
                         IsCommitted = true,
                         Keywords = "lorem, ipsum, dolor",
-                        Logs = new List<NewsReleaseLog>
+                        NewsReleaseLog = new List<NewsReleaseLog>
                     {
                         new NewsReleaseLog
                         {
@@ -71,7 +71,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                     IsActive = true,
                     IsCommitted = true,
                     Keywords = "lorem, ipsum, dolor",
-                    Logs = new List<NewsReleaseLog>
+                    NewsReleaseLog = new List<NewsReleaseLog>
                     {
                         new NewsReleaseLog
                         {
