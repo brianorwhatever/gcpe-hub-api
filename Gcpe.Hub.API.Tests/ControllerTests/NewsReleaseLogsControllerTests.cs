@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Xunit;
-using Moq;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
-using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.API.Data;
 using Gcpe.Hub.API.ViewModels;
+using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
 
 namespace Gcpe.Hub.API.Tests.ControllerTests
 {
@@ -79,8 +79,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var expectedCount = _expectedModelReturn.Logs.Count;
-            var expectedLogEntry = _expectedModelReturn.Logs.FirstOrDefault();
+            var expectedCount = _expectedModelReturn.NewsReleaseLog.Count;
+            var expectedLogEntry = _expectedModelReturn.NewsReleaseLog.FirstOrDefault();
             var mockRepository = CreateDataStore();
             var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper.Object);
 
