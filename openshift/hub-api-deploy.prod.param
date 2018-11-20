@@ -4,8 +4,8 @@
 # Template File: templates/hub-api/hub-api-deploy.yaml
 #=========================================================
 # NAME=hub-api
-APPLICATION_DOMAIN=hub-api-news-prod.pathfinder.gov.bc.ca
-# IMAGE_NAMESPACE=hub-tools
+APPLICATION_DOMAIN=hub-api-hub-api-prod.pathfinder.gov.bc.ca
+# IMAGE_NAMESPACE=hub-api-tools
 # SOURCE_IMAGE_NAME=hub-api
 TAG_NAME=prod
 # ASPNETCORE_ENVIRONMENT=Production

@@ -32,6 +32,13 @@ def tagExists(is_name, tag) {
   return false
 }
 
+def getLatestHash(imageStreamName) {
+  return sh (
+    script: """oc get istag ${imageStreamName}:latest -o=jsonpath='{@.image.metadata.name}' | sed -e 's/sha256://g'""",
+    returnStdout: true
+  ).trim()
+}
+
 node {
   /* Build stage
       - applying OpenShift build configs
@@ -44,9 +51,7 @@ node {
 
     // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
     // Tag the images for deployment based on the image's hash
-    IMAGE_HASH = sh (
-      script: """oc get istag ${IMAGESTREAM_NAME}:latest | grep sha256: | awk -F "sha256:" '{print \$3}'""",
-      returnStdout: true).trim()
+    IMAGE_HASH = getLatestHash(IMAGESTREAM_NAME)
 
     echo ">>>>>> IMAGE_HASH: ${IMAGE_HASH}"
     echo ">>>>>> Build Complete"
