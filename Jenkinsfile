@@ -17,6 +17,14 @@ def TAG_NAMES_BACKUP = [
 def BUILD_CONFIG = APP_NAME
 def IMAGESTREAM_NAME = APP_NAME
 
+// Gets the container hash for the latest image in an image stream
+def getLatestHash(imageStreamName) {
+  return sh (
+    script: """oc get istag ${imageStreamName}:latest -o=jsonpath='{@.image.metadata.name}' | sed -e 's/sha256://g'""",
+    returnStdout: true
+  ).trim()
+}
+
 // Checks whether we are running this pipeline for the first time by looking at what tags are available on the application's ImageStream
 def tagExists(is_name, tag) {
   // Get all tags already applied to this ImageStream (as a single string); e.g., 'dev test dev-previous my-other-tag'
@@ -44,9 +52,7 @@ node {
 
     // Don't tag with BUILD_ID so the pruner can do it's job; it won't delete tagged images.
     // Tag the images for deployment based on the image's hash
-    IMAGE_HASH = sh (
-      script: """oc get istag ${IMAGESTREAM_NAME}:latest | grep sha256: | awk -F "sha256:" '{print \$3}'""",
-      returnStdout: true).trim()
+    IMAGE_HASH = getLatestHash(IMAGESTREAM_NAME)
 
     echo ">>>>>> IMAGE_HASH: ${IMAGE_HASH}"
     echo ">>>>>> Build Complete"
