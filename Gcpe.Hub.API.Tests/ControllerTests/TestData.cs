@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Gcpe.Hub.API.Models;
 using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.Tests.ControllerTests
@@ -90,5 +91,55 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 };
             }
         }
+
+        public static List<Message> TestMessages
+        {
+            get
+            {
+                var messages = new List<Message>();
+
+                for (var i = 0; i < 10; i++)
+                {
+                    var id = Guid.NewGuid();
+
+                    var message = new Message
+                    {
+                        Id = id,
+                        Title = $"2018PREM{i}-{i}00000",
+                        Description = $"DESCRIPTION--{i}",
+                        SortOrder = i,
+                        Timestamp = DateTime.Now,
+                        IsPublished = true,
+                        IsHighlighted = false
+                    };
+
+                    messages.Add(message);
+                }
+
+                return messages;
+            }
+        }
+
+        public static Message TestMessage
+        {
+            get
+            {
+                var id = Guid.NewGuid();
+
+                var message = new Message
+                {
+                    Id = id,
+                    Title = $"2018MESSAGE-1",
+                    Description = $"DESCRIPTION-1",
+                    SortOrder = 0,
+                    Timestamp = DateTime.Now,
+                    IsPublished = true,
+                    IsHighlighted = false
+                };
+
+                return message;
+            }
+        }
+
     }
 }

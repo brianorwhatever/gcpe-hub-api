@@ -11,7 +11,9 @@ namespace Gcpe.Hub.API.Data
         {
             CreateMap<Activity, ActivityViewModel>()
                 .ForMember(dest => dest.MinistriesSharedWith, opt => opt.MapFrom(src => src.ActivitySharedWith.Select(sw => sw.Ministry.Key)))
-                .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)))
+                .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)));
+
+            CreateMap<Message, MessageViewModel>()
                 .ReverseMap();
 
             CreateMap<NewsRelease, NewsReleaseViewModel>()
