@@ -1,0 +1,7 @@
+node('master') {
+    stage('Build Image') {
+        echo "Building..."
+        openshiftBuild bldCfg: 'hub-api', showBuildLogs: 'true'
+        openshiftTag destStream: 'news-webapp', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'news-webapp', srcTag: 'latest'
+    }
+}
