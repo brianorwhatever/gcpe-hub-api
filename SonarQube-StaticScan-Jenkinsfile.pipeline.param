@@ -1,11 +1,11 @@
 #=========================================================
 # OpenShift Jenkins pipeline template parameters for:
-# Jenkinsfile: ./Jenkinsfile
+# Jenkinsfile: ./SonarQube-StaticScan-Jenkinsfile
 # Template File: https://raw.githubusercontent.com/BCDevOps/openshift-tools/master/provisioning/pipeline/resources/pipeline-build.json
 #=========================================================
-NAME=news-dashboard
+NAME=sonarqube-staticscan
 # GITHUB_WEBHOOK_SECRET=[a-zA-Z0-9]{40}
 SOURCE_REPOSITORY_URL=https://github.com/bcgov/gcpe-hub-api.git
 SOURCE_REPOSITORY_REF=develop
 CONTEXT_DIR=
-JENKINSFILE_PATH=Jenkinsfile-develop
+JENKINSFILE_PATH=SonarQube-StaticScan-Jenkinsfile
