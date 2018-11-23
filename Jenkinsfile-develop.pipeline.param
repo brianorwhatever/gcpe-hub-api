@@ -8,4 +8,4 @@ NAME=news-dashboard
 SOURCE_REPOSITORY_URL=https://github.com/bcgov/gcpe-hub-api.git
 SOURCE_REPOSITORY_REF=develop
 CONTEXT_DIR=
-JENKINSFILE_PATH=Jenkinsfile
+JENKINSFILE_PATH=Jenkinsfile-develop
