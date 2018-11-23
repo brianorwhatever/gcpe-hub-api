@@ -2,6 +2,6 @@ node('master') {
     stage('Build Image') {
         echo "Building..."
         openshiftBuild bldCfg: 'hub-api', showBuildLogs: 'true'
-        openshiftTag destStream: 'hub-api-develop', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api-develop', srcTag: 'latest'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api', srcTag: 'latest'
     }
 }
