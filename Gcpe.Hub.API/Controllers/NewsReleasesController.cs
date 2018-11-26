@@ -88,25 +88,18 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                if (ModelState.IsValid)
-                {
-                    var newRelease = _mapper.Map<NewsReleaseViewModel, NewsRelease>(model);
+                var newRelease = _mapper.Map<NewsReleaseViewModel, NewsRelease>(model);
 
-                    _repository.AddEntity(newRelease);
-                    // can assume that this always works against an in memory dataset
-                    return StatusCode(201);
+                _repository.AddEntity(newRelease);
+                // can assume that this always works against an in memory dataset
+                return StatusCode(201);
 
-                    // can be un-commented when working with a db
-                    // return CreatedAtRoute("GetRelease", new { id = newRelease.Id }, newRelease);
-                    //if (_repository.SaveAll())
-                    //{
-                    //    return CreatedAtRoute("GetRelease", new { id = newRelease.Id }, newRelease);
-                    //}
-                }
-                else
-                {
-                    return BadRequest(ModelState);
-                }
+                // can be un-commented when working with a db
+                // return CreatedAtRoute("GetRelease", new { id = newRelease.Id }, newRelease);
+                //if (_repository.SaveAll())
+                //{
+                //    return CreatedAtRoute("GetRelease", new { id = newRelease.Id }, newRelease);
+                //}
             }
             catch (Exception ex)
             {
@@ -120,16 +113,16 @@ namespace Gcpe.Hub.API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public IActionResult Put(string id, [FromBody] NewsRelease model)
+        public IActionResult Put(string id, [FromBody] NewsReleaseViewModel model)
         {
             try
             {
-                var oldRelease = _repository.GetReleaseByKey(id);
-                if (oldRelease == null)
+                if (_repository.GetReleaseByKey(id) == null)
                 {
                     return NotFound($"Could not find a release with an id of {id}");
                 }
-                _repository.Update(id, model);
+                var release = _mapper.Map<NewsReleaseViewModel, NewsRelease>(model);
+                _repository.Update(id, release);
                 return Ok(model);
             }
             catch (Exception ex)
