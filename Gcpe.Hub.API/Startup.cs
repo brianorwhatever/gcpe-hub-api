@@ -73,7 +73,7 @@ namespace Gcpe.Hub.API
                 {
                     Version = "Alpha",
                     Title = "BC Gov Hub API service",
-                    Description = "The .net Core 2.1 API for the Hub"
+                    Description = "The .Net Core 2.1 API for the Hub"
                 });
             });
 
