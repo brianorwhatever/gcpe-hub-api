@@ -1,13 +1,10 @@
 ﻿using AutoMapper;
 using Gcpe.Hub.API.Data;
-using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.HealthChecks;
@@ -38,10 +35,6 @@ namespace Gcpe.Hub.API
             // dependency injection for interfacing with in memory data
             services.AddSingleton<IDataContext, InMemoryDataContext>();
             services.AddSingleton<IRepository, InMemoryRepository>();
-
-            services.AddDbContext<HubDbContext>(options => options.UseSqlServer(Configuration["HubDbContext"])
-                .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning)));
-
 
             services.AddMvc()
                 .AddJsonOptions(opt => opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore)
@@ -80,7 +73,7 @@ namespace Gcpe.Hub.API
                 {
                     Version = "Alpha",
                     Title = "BC Gov Hub API service",
-                    Description = "The .Net Core API for the Hub"
+                    Description = "The .net Core 2.1 API for the Hub"
                 });
             });
 
