@@ -1,20 +1,20 @@
 node('master') {
-    // stage('Build Image') {
-    //     echo "Building..."
-    //     openshiftBuild bldCfg: 'hub-api', showBuildLogs: 'true'
-    //     openshiftTag destStream: 'hub-api', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api', srcTag: 'latest'
-    // }
+    stage('Dependency Security Check') {
+        echo "Running Snyk analysis of dependencies"
+        openshiftBuild bldCfg: 'hub-api-snyk-develop.build-snyk-develop', showBuildLogs: 'true'
+    }
+    
+    stage('Build Image') {
+        echo "Building..."
+        openshiftBuild bldCfg: 'hub-api', showBuildLogs: 'true'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api', srcTag: 'latest'
+    }
 
-    // stage('Deploy on Dev') {
-    //     echo "Deploying to dev..."
-    //     openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'dev', srcStream: 'hub-api', srcTag: '$BUILD_ID'
-	//     // Sleeping for a while to wait deployment completes
-    // }
-	
-	// stage('Deploy on Test') {
-    //     input "Deploy to test?"
-	//     openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: '$BUILD_ID'
-	// }
+    stage('Deploy on Dev') {
+        echo "Deploying to dev..."
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'dev', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+	    // Sleeping for a while to wait deployment completes
+    }
 
     
 }
