@@ -14,7 +14,7 @@ namespace Gcpe.Hub.API.IntegrationTests
 
         [Theory]
         [InlineData("/", "text/html", "it should redirect to the Swagger UI page that display HTML content")]
-        [InlineData("/hc", "application/json", "it should output JSON data")]
+        // [InlineData("/hc", "application/json", "it should output JSON data")]
         [InlineData("/api/newsreleases", "application/json", "it should output JSON data")]
         public async Task ReturnSuccessAndCorrectContentType(string url, string contentType, string because = "")
         {
