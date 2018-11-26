@@ -1,0 +1,14 @@
+#=========================================================
+# OpenShift template parameters for:
+# Component: .
+# Template File: templates/dotnet-sonar/dotnet-sonar-build.json
+#=========================================================
+NAME=dotnet-sonar
+GIT_REPO_URL=https://github.com/bcgov/gcpe-hub-api.git
+GIT_REF=develop
+SOURCE_CONTEXT_DIR=/Dotnet-Sonar
+SOURCE_IMAGE_KIND=DockerImage
+SOURCE_IMAGE_NAME=registry.access.redhat.com/dotnet/dotnet-21-rhel7
+SOURCE_IMAGE_TAG=latest
+DOCKER_FILE_PATH=Dockerfile.RHEL
+OUTPUT_IMAGE_TAG=latest
