@@ -138,7 +138,7 @@
         "displayName": "DotNet Startup Project",
         "description": "The path to the startup project for the .Net application.",
         "required": true,
-        "value": "Gov.News.WebApp"
+        "value": "Gcpe.Hub.API"
       },
       {
         "name": "OUTPUT_IMAGE_TAG",
