@@ -1,13 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
-using Gcpe.Hub.Data.Entity;
-using Gcpe.Hub.API.Data;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Gcpe.Hub.API.ViewModels;
+using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Gcpe.Hub.API.Controllers
 {
