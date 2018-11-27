@@ -6,7 +6,7 @@ node('master') {
 
   
   stage('SCM') {
-    git 'https://github.com/foo/bar.git'
+    git 'https://github.com/bcgov/gcpe-hub-api'
   }
 
   stage('Build + SonarQube analysis') {
