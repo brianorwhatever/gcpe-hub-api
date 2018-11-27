@@ -19,6 +19,9 @@ namespace Gcpe.Hub.API.Data
 
             CreateMap<NewsReleaseLog, NewsReleaseLogViewModel>()
                 .ReverseMap();
+
+            CreateMap<Message, MessageViewModel>()
+                .ReverseMap();
         }
     }
 }

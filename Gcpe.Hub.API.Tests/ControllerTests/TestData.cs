@@ -90,5 +90,27 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 };
             }
         }
+
+        public static Message TestMessage
+        {
+            get
+            {
+                var id = Guid.NewGuid();
+
+                var message = new Message
+                {
+                    Id = id,
+                    Title = "2018MESSAGE-1",
+                    Description = $"DESCRIPTION-1",
+                    SortOrder = 0,
+                    Timestamp = DateTime.Now,
+                    IsPublished = true,
+                    IsHighlighted = false
+                };
+
+                return message;
+            }
+        }
+
     }
 }
