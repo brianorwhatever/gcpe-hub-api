@@ -1,24 +1,29 @@
 node('master') {
+
+    // TODO: review getting this to work with sonarqube scanner for msbuild plugin
+    // stage('SCM') {
+    //   git 'https://github.com/bcgov/gcpe-hub-api'
+    // }
+
+    // stage('Build + SonarQube analysis') {
+    //   def sqScannerMsBuildHome = tool 'ntu9uh-sonar-scanner'
+    //   withSonarQubeEnv('Sonarqube') {
+    //     // Due to SONARMSBRU-307 value of sonar.host.url and credentials should be passed on command line
+    //     sh "${sqScannerMsBuildHome}/sonar-scanner-3.2.0.1227/bin/sonar-scanner begin /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.login=%SONAR_AUTH_TOKEN%"
+    //     sh 'MSBuild.exe /t:Rebuild'
+    //     sh "${sqScannerMsBuildHome}/sonar-scanner-3.2.0.1227/bin/sonar-scanner end"
+    //   }
+    // }
+
+    stage('Code Quality') {
+        echo "Running SonarQube static code analysis."
+        openshiftBuild bldCfg: 'hub-api-sonar-develop.build-sonar-develop', showBuildLogs: 'true'
+    }
+
     stage('Dependency Security Check') {
         echo "Running Snyk analysis of dependencies"
         openshiftBuild bldCfg: 'hub-api-snyk-develop.build-snyk-develop', showBuildLogs: 'true'
     }
-
-  
-  stage('SCM') {
-    git 'https://github.com/bcgov/gcpe-hub-api'
-  }
-
-  stage('Build + SonarQube analysis') {
-    def sqScannerMsBuildHome = tool 'ntu9uh-sonar-scanner'
-    withSonarQubeEnv('Sonarqube') {
-      // Due to SONARMSBRU-307 value of sonar.host.url and credentials should be passed on command line
-      sh "${sqScannerMsBuildHome}/sonar-scanner-3.2.0.1227/bin/sonar-scanner begin /d:sonar.host.url=%SONAR_HOST_URL% /d:sonar.login=%SONAR_AUTH_TOKEN%"
-      sh 'MSBuild.exe /t:Rebuild'
-      sh "${sqScannerMsBuildHome}/sonar-scanner-3.2.0.1227/bin/sonar-scanner end"
-    }
-  }
-
     
     stage('Build Image') {
         echo "Building..."

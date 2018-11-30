@@ -16,6 +16,6 @@ CPU_LIMIT=1
 MEMORY_LIMIT=6Gi
 CPU_REQUEST=1
 MEMORY_REQUEST=4Gi
-SONAR_TOKEN=4Gi
+SONAR_TOKEN=
 SONAR_PROJECT=Hub-Api-Develop
 SONAR_URL=http://sonarqube-gcpe-news-tools.pathfinder.gov.bc.ca
