@@ -180,7 +180,7 @@
         "displayName": "SonarQube Token",
         "description": "The SonarQube user token",
         "required": true,
-        "value": "4Gi"
+        "value": ""
       },
       {
         "name": "SONAR_PROJECT",
