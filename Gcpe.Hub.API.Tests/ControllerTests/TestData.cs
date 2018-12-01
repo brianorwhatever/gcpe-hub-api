@@ -90,5 +90,22 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 };
             }
         }
+        public static Message CreateMessage(string title, string description,
+            int sortOrder, bool isPublished = false, bool isHighlighted = false)
+        {
+            var message = new Message
+            {
+                Id = Guid.Empty,
+                Title = title,
+                Description = description,
+                SortOrder = sortOrder,
+                IsPublished = isPublished,
+                IsHighlighted = isHighlighted,
+                Timestamp = DateTime.Now
+            };
+
+            return message;
+        }
+
     }
 }

@@ -242,7 +242,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.Put("0", _expectedModelReturn);
+            var result = controller.Put("0", _mapper.Object.Map<NewsRelease, NewsReleaseViewModel>(_expectedModelReturn));
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -262,7 +262,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.Put("-1", _expectedModelReturn);  // does not exist...
+            var result = controller.Put("-1", _mapper.Object.Map<NewsRelease, NewsReleaseViewModel>(_expectedModelReturn));  // does not exist...
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -283,7 +283,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.Put("0", _expectedModelReturn) as BadRequestObjectResult;
+            var result = controller.Put("0", _mapper.Object.Map<NewsRelease, NewsReleaseViewModel>(_expectedModelReturn)) as BadRequestObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
