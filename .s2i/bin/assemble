@@ -119,7 +119,7 @@ if [ -n "$SONAR_TOKEN" ]; then
   dotnet tool install --global dotnet-sonarscanner
   dotnet sonarscanner begin /d:sonar.login=$SONAR_TOKEN /k:"$SONAR_PROJECT" /d:sonar.host.url=$SONAR_URL
   dotnet build "$DOTNET_STARTUP_PROJECT" -f "$DOTNET_FRAMEWORK" -c "$DOTNET_CONFIGURATION"
-  dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN /d:sonar.host.url=$SONAR_URL
+  dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN
 elif [ -n "$SNYK_TOKEN" ]; then
 		# run the snyk scan.  Note SNYK_TOKEN is automatically used by the snyk scanner for authentication.
 		snyk test --file="$DOTNET_STARTUP_PROJECT"
