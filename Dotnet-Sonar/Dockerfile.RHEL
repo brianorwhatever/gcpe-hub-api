@@ -6,6 +6,6 @@ USER 0
 
 # dotnet-sonarscanner 
 
-RUN dotnet tool install --global dotnet-sonarscanner
+# RUN 
 
 USER 1001
