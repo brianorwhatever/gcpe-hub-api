@@ -7,7 +7,8 @@ USER 0
 # Install Java JDK 8
  RUN pushd /opt \
     && yum install yum-utils \
-	&& rpm --import "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF" \
+	  && rpm --import "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF" \
+    && yum-config-manager --add-repo http://download.mono-project.com/repo/centos/ \
     && INSTALL_PKGS="tar unzip bc which lsof java-1.8.0-openjdk java-1.8.0-openjdk-devel" \
     && yum install -y $INSTALL_PKGS \
     && rpm -V $INSTALL_PKGS \
