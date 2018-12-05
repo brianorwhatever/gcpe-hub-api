@@ -14,5 +14,6 @@ USER 0
     && yum clean all -y \
     && rm -R /opt/app-root/.pki \
     && popd
+    && java -version
 
 USER 1001
