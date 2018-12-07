@@ -1,7 +1,7 @@
 #=========================================================
 # OpenShift template parameters for:
 # Component: .
-# Template File: templates/hub-api-sonar-develop.build.json
+# Template File: templates/hub-api-sonar-master.build.json
 #=========================================================
 NAME=hub-api-sonar-master.build
 GIT_REPO_URL=https://github.com/bcgov/gcpe-hub-api.git

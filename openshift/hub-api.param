@@ -1,11 +1,11 @@
 #=========================================================
 # OpenShift template parameters for:
 # Component: .
-# Template File: templates/hub-api/hub-api-develop-build.yaml
+# Template File: templates/hub-api/hub-api-build.yaml
 #=========================================================
-NAME=hub-api-develop
+NAME=hub-api
 GIT_REPO_URL=https://github.com/bcgov/gcpe-hub-api.git
-GIT_REF=develop
+GIT_REF=master
 SOURCE_CONTEXT_DIR=
 SOURCE_IMAGE_KIND=DockerImage
 SOURCE_IMAGE_NAME=registry.access.redhat.com/dotnet/dotnet-21-rhel7
