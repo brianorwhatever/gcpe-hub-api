@@ -34,7 +34,6 @@ node('master') {
     stage('Deploy on Dev') {
         echo "Deploying to dev..."
         openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'dev', srcStream: 'hub-api', srcTag: '$BUILD_ID'
-	    // Sleeping for a while to wait deployment completes
     }   
 }
 
@@ -61,4 +60,12 @@ podTemplate(label: 'owasp-zap', name: 'owasp-zap', serviceAccount: 'jenkins', cl
          }
        }
      }
+}
+
+stage('Deploy on Test') {
+    input "Deploy to test?"
+    node('master') {
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+	sh 'sleep 3m'
+    }
 }
