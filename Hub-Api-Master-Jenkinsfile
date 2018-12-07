@@ -1,0 +1,25 @@
+node('master') {
+    stage('Code Quality') {
+        echo "Running SonarQube static code analysis."
+        openshiftBuild bldCfg: 'hub-api-sonar-master.build-sonar-master', showBuildLogs: 'true'
+    }
+
+    stage('Dependency Security Check') {
+        echo "Running Snyk analysis of dependencies"
+        openshiftBuild bldCfg: 'hub-api-snyk-master.build-snyk-master', showBuildLogs: 'true'
+    }
+    
+    stage('Build Image') {
+        echo "Building..."
+        openshiftBuild bldCfg: 'hub-api', showBuildLogs: 'true'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api', srcTag: 'latest'
+    } 
+}
+
+stage('Deploy on Prod') {
+    input "Deploy to Prod?"
+    node('master') {
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'prod', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+	    sh 'sleep 3m'
+    }
+}
