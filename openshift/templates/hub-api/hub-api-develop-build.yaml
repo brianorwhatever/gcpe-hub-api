@@ -68,7 +68,7 @@ parameters:
       Set this to a branch name, tag or other ref of your repository if you are
       not using the default branch.
     required: true
-    value: master
+    value: develop
   - name: SOURCE_CONTEXT_DIR
     displayName: Context Directory
     description: >-

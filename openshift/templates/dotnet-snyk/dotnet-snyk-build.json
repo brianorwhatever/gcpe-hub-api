@@ -84,7 +84,7 @@
         "displayName": "Git Repo URL",
         "description": "The URL to your GIT repo.",
         "required": true,
-        "value": "https://github.com/bcgov/gcpe-news-webapp.git"
+        "value": "https://github.com/bcgov/gcpe-news-dashboard"
       },
       {
         "name": "GIT_REF",

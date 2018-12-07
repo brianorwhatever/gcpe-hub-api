@@ -194,7 +194,7 @@
         "displayName": "SonarQube URL",
         "description": "The SonarQube URL",
         "required": true,
-        "value": "http://sonarqube-gcpe-news-tools.pathfinder.gov.bc.ca"
+        "value": "https://sonarqube-ntu9uh-tools.pathfinder.gov.bc.ca"
       } 	
     ]
   }
