@@ -61,7 +61,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
 
             result.Should().BeOfType<OkObjectResult>();
             result.Should().NotBeNull();
-            var models = result.Value as ICollection<Message>;
+            var models = result.Value as ICollection<MessageViewModel>;
             models.Should().NotBeNull();
             models.Count().Should().Be(messageCount);
         }
@@ -91,7 +91,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var result = controller.GetAll(isPublished) as ObjectResult;
 
             result.Should().BeOfType<OkObjectResult>();
-            var models = result.Value as ICollection<Message>;
+            var models = result.Value as ICollection<MessageViewModel>;
             models.Count().Should().Be(isPublished ? publishedCount : unpublishedCount);
         }
 

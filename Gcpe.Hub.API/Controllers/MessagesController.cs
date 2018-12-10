@@ -26,26 +26,30 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
         }
 
+        private IActionResult GetBadRequest(string message, Exception ex)
+        {
+            logger.LogError($"{message}: {ex}");
+            return BadRequest(message);
+        }
+
         [HttpGet]
-        [ProducesResponseType(200)]
+        [Produces(typeof(MessageViewModel))]
         [ProducesResponseType(400)]
         public IActionResult GetAll([FromQuery(Name = "IsPublished")] Boolean IsPublished = true)
         {
             try
             {
-                var messages = dbContext.Message.Where(m => m.IsPublished == IsPublished).ToList();
-                mapper.Map<List<Message>, List<MessageViewModel>>(messages);
-                return Ok(messages);
+                var messages = dbContext.Message.Where(m => m.IsPublished == IsPublished).OrderBy(p => p.SortOrder).ToList();
+                return Ok(mapper.Map<List<Message>, List<MessageViewModel>>(messages));
             }
             catch (Exception ex)
             {
-                logger.LogError($"Failed to get messages: {ex}");
-                return BadRequest("Failed to get messages");
+                return GetBadRequest("Failed to retrieve messages", ex);
             }
         }
 
         [HttpPost]
-        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(MessageViewModel), 201)]
         [ProducesResponseType(400)]
         public IActionResult Post(MessageViewModel messageVM)
         {
@@ -63,14 +67,12 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError($"Failed to create message: {ex}");
-                return BadRequest("Failed to create message");
+                return GetBadRequest("Failed to create message", ex);
             }
         }
 
         [HttpGet("{id}", Name = "GetMessage")]
         [Produces(typeof(MessageViewModel))]
-        [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         public IActionResult Get(Guid id)
@@ -86,14 +88,12 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError($"Failed to retrieve message: {ex}");
-                return BadRequest("Failed to retrieve message");
+                return GetBadRequest("Failed to retrieve message", ex);
             }
         }
 
         [HttpPut("{id}")]
         [Produces(typeof(MessageViewModel))]
-        [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         public IActionResult Put(Guid id, MessageViewModel messageVM)
@@ -112,12 +112,10 @@ namespace Gcpe.Hub.API.Controllers
                     return Ok(mapper.Map<Message, MessageViewModel>(dbMessage));
                 }
                 return NotFound($"Message not found with id: {id}");
-
             }
             catch (Exception ex)
             {
-                logger.LogError($"Failed to update message: {ex}");
-                return BadRequest("Failed to update message");
+                return GetBadRequest("Failed to update message", ex);
             }
         }
     }

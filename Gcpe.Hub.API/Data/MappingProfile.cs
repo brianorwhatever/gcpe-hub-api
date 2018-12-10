@@ -22,6 +22,9 @@ namespace Gcpe.Hub.API.Data
 
             CreateMap<Message, MessageViewModel>()
                 .ReverseMap();
+
+            CreateMap<SocialMediaPost, SocialMediaPostViewModel>()
+                .ReverseMap();
         }
     }
 }
