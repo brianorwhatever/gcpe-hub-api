@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Gcpe.Hub.API.ViewModels
+namespace Gcpe.Hub.API.Models
 {
-    public class ActivityViewModel
+    public class Activity
     {
         public int Id { get; set; }
         public DateTime? StartDateTime { get; set; }

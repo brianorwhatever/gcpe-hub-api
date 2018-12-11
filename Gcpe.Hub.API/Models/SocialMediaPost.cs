@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Gcpe.Hub.API.ViewModels
+namespace Gcpe.Hub.API.Models
 {
-    public class SocialMediaPostViewModel
+    public class SocialMediaPost
     {
         public Guid Id { get; set; }
         [Required]

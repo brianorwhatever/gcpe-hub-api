@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -16,6 +19,11 @@ namespace Gcpe.Hub.API.Helpers
                 JsonConvert.SerializeObject(paginationHeader, camelCaseFormatter));
             response.Headers.Add("Access-Control-Expose-Headers", "Pagination");
 
+        }
+        public static IActionResult BadRequest(this ControllerBase controller, ILogger logger, string error, Exception ex)
+        {
+            logger.LogError(error + ": " + ex.ToString());
+            return controller.BadRequest(error);
         }
     }
 }

@@ -5,7 +5,6 @@ using AutoMapper;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
 using Gcpe.Hub.API.Data;
-using Gcpe.Hub.API.ViewModels;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,18 +23,18 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
 
         public MessagesControllerTests()
         {
-            this.options = new DbContextOptionsBuilder<HubDbContext>()
+            options = new DbContextOptionsBuilder<HubDbContext>()
                       .UseInMemoryDatabase(Guid.NewGuid().ToString())
                       .Options;
-            this.context = new HubDbContext(this.options);
+            context = new HubDbContext(this.options);
 
-            this.logger = new Mock<ILogger<MessagesController>>();
+            logger = new Mock<ILogger<MessagesController>>();
 
             var mockMapper = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new MappingProfile());
             });
-            this.mapper = mockMapper.CreateMapper();
+            mapper = mockMapper.CreateMapper();
         }
         public void Dispose()
         {
@@ -50,18 +49,18 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             for (var i = 0; i < messageCount; i++)
             {
-                var message = TestData.CreateMessage(i.ToString(), "test description", 0, true, false);
-                message.Id = Guid.NewGuid();
-                context.Message.Add(message);
+                var dbMessage = TestData.CreateDbMessage(i.ToString(), "test description", 0, true, false);
+                dbMessage.Id = Guid.NewGuid();
+                context.Message.Add(dbMessage);
             }
             context.SaveChanges();
             var controller = new MessagesController(context, logger.Object, mapper);
 
-            var result = controller.GetAll() as ObjectResult;
+            var result = controller.GetAllMessages() as ObjectResult;
 
             result.Should().BeOfType<OkObjectResult>();
             result.Should().NotBeNull();
-            var models = result.Value as ICollection<MessageViewModel>;
+            var models = result.Value as ICollection<Models.Message>;
             models.Should().NotBeNull();
             models.Count().Should().Be(messageCount);
         }
@@ -75,34 +74,34 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var unpublishedCount = 2;
             for (var i = 0; i < publishedCount; i++)
             {
-                var testMessage = TestData.CreateMessage($"published-{i.ToString()}", "test description", 0, true, false);
-                testMessage.Id = Guid.NewGuid();
-                context.Message.Add(testMessage);
+                var testDbMessage = TestData.CreateDbMessage($"published-{i.ToString()}", "test description", 0, true, false);
+                testDbMessage.Id = Guid.NewGuid();
+                context.Message.Add(testDbMessage);
             }
             for (var i = 0; i < unpublishedCount; i++)
             {
-                var testMessage = TestData.CreateMessage($"unpublished-{i.ToString()}", "test description", 0, false, false);
+                var testMessage = TestData.CreateDbMessage($"unpublished-{i.ToString()}", "test description", 0, false, false);
                 testMessage.Id = Guid.NewGuid();
                 context.Message.Add(testMessage);
             }
             context.SaveChanges();
             var controller = new MessagesController(context, logger.Object, mapper);
 
-            var result = controller.GetAll(isPublished) as ObjectResult;
+            var result = controller.GetAllMessages(isPublished) as ObjectResult;
 
             result.Should().BeOfType<OkObjectResult>();
-            var models = result.Value as ICollection<MessageViewModel>;
+            var models = result.Value as ICollection<Models.Message>;
             models.Count().Should().Be(isPublished ? publishedCount : unpublishedCount);
         }
 
         [Fact]
         public void GetAll_ShouldReturnBadRequest()
         {
-            var mockContext = new Mock<HubDbContext>(this.options);
+            var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.Message).Throws(new Exception());
             var controller = new MessagesController(mockContext.Object, logger.Object, mapper);
 
-            var result = controller.GetAll() as ObjectResult;
+            var result = controller.GetAllMessages() as ObjectResult;
 
             result.StatusCode.Should().Be(400);
             result.Should().BeOfType<BadRequestObjectResult>();
@@ -112,13 +111,13 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         public void Post_ShouldReturnSuccess()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
-            var testMessage = TestData.CreateMessage("2018MESSAGE-1", "test description", 0);
+            var testDbMessage = TestData.CreateDbMessage("2018MESSAGE-1", "test description", 0);
 
-            var result = controller.Post(mapper.Map<Message, MessageViewModel>(testMessage)) as ObjectResult;
+            var result = controller.AddMessage(mapper.Map<Models.Message>(testDbMessage)) as ObjectResult;
 
             result.StatusCode.Should().Be(201);
             result.Should().BeOfType<CreatedAtRouteResult>();
-            var model = result.Value as MessageViewModel;
+            var model = result.Value as Models.Message;
             model.Title.Should().Be("2018MESSAGE-1");
         }
 
@@ -126,10 +125,10 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         public void Post_ShouldReturnBadRequest()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
-            var testMessage = TestData.CreateMessage("1", "test description", 0);
-            testMessage.Id = Guid.NewGuid();
+            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0);
+            testDbMessage.Id = Guid.NewGuid();
 
-            var result = controller.Post(mapper.Map<Message, MessageViewModel>(testMessage)) as ObjectResult;
+            var result = controller.AddMessage(mapper.Map<Models.Message>(testDbMessage)) as ObjectResult;
 
             result.Should().BeOfType<BadRequestObjectResult>();
             result.StatusCode.Should().Be(400);
@@ -139,32 +138,29 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         public void Get_ShouldReturnSuccess()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
-            var testMessage = TestData.CreateMessage("2018MESSAGE-1", "test description", 0);
-            context.Message.Add(testMessage);
+            var testDbMessage = TestData.CreateDbMessage("2018MESSAGE-1", "test description", 0);
+            context.Message.Add(testDbMessage);
             context.SaveChanges();
 
-            var result = controller.Get(testMessage.Id) as ObjectResult;
+            var result = controller.GetMessage(testDbMessage.Id) as ObjectResult;
 
             result.Should().BeOfType<OkObjectResult>();
             result.StatusCode.Should().Be(200);
-            var model = result.Value as MessageViewModel;
+            var model = result.Value as Models.Message;
             model.Title.Should().Be("2018MESSAGE-1");
         }
 
         [Fact]
         public void Get_ShouldReturnFail()
         {
-            var options = new DbContextOptionsBuilder<HubDbContext>()
-                      .UseInMemoryDatabase(Guid.NewGuid().ToString())
-                      .Options;
             var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.Message).Throws(new Exception());
             var controller = new MessagesController(mockContext.Object, logger.Object, mapper);
-            var testMessage = TestData.CreateMessage("1", "test description", 0);
-            context.Message.Add(testMessage);
+            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0);
+            context.Message.Add(testDbMessage);
             context.SaveChanges();
 
-            var result = controller.Get(testMessage.Id) as ObjectResult;
+            var result = controller.GetMessage(testDbMessage.Id) as ObjectResult;
 
             result.Should().BeOfType<BadRequestObjectResult>();
             result.StatusCode.Should().Be(400);
@@ -175,7 +171,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             var controller = new MessagesController(context, logger.Object, mapper);
 
-            var result = controller.Get(Guid.NewGuid()) as ObjectResult;
+            var result = controller.GetMessage(Guid.NewGuid()) as ObjectResult;
 
             result.Should().BeOfType<NotFoundObjectResult>();
             result.StatusCode.Should().Be(404);
@@ -184,22 +180,22 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         [Fact]
         public void Put_ShouldReturnSuccess()
         {
-            var testMessage = TestData.CreateMessage("1", "test description", 0);
+            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0);
 
-            context.Message.Add(testMessage);
+            context.Message.Add(testDbMessage);
             context.SaveChanges();
-            var testMessageVM = mapper.Map<Message, MessageViewModel>(testMessage);
-            testMessageVM.Title = "New Title!";
+            var testMessage = mapper.Map<Models.Message>(testDbMessage);
+            testMessage.Title = "New Title!";
 
 
             var controller = new MessagesController(context, logger.Object, mapper);
-            var result = controller.Put(testMessage.Id, testMessageVM) as ObjectResult;
+            var result = controller.UpdateMessage(testDbMessage.Id, testMessage) as ObjectResult;
 
             result.Should().BeOfType<OkObjectResult>();
             result.StatusCode.Should().Be(200);
-            var model = result.Value as MessageViewModel;
+            var model = result.Value as Models.Message;
             model.Title.Should().Be("New Title!");
-            var dbMessage = context.Message.Find(testMessage.Id);
+            var dbMessage = context.Message.Find(testDbMessage.Id);
             dbMessage.Title.Should().Be("New Title!");
         }
         
@@ -207,11 +203,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         public void Put_ShouldReturnBadRequest()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
-            var testMessage = TestData.CreateMessage("1", "test description", 0);
-            context.Message.Add(testMessage);
+            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0);
+            context.Message.Add(testDbMessage);
             context.SaveChanges();
 
-            var result = controller.Put(testMessage.Id, messageVM: null) as ObjectResult ;
+            var result = controller.UpdateMessage(testDbMessage.Id, message: null) as ObjectResult ;
 
             result.Should().BeOfType<BadRequestObjectResult>();
             result.StatusCode.Should().Be(400);
@@ -221,9 +217,9 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         public void Put_ShouldReturnNotFound()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
-            var testMessage = TestData.CreateMessage("1", "test description", 0);
+            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0);
 
-            var result = controller.Put(testMessage.Id, messageVM: null) as ObjectResult;
+            var result = controller.UpdateMessage(testDbMessage.Id, message: null) as ObjectResult;
 
             result.Should().BeOfType<NotFoundObjectResult>();
             result.StatusCode.Should().Be(404);

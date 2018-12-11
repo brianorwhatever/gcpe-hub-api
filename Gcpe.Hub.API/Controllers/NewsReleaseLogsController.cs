@@ -2,8 +2,6 @@
 using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.API.Data;
-using Gcpe.Hub.API.ViewModels;
-using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -27,26 +25,28 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpGet]
+        [Produces(typeof(IEnumerable<Models.NewsReleaseLog>))]
         public IActionResult GetAll(string newsReleaseId)
         {
-            var release = _repository.GetReleaseByKey(newsReleaseId);
-            if (release != null)
+            var dbRelease = _repository.GetReleaseByKey(newsReleaseId);
+            if (dbRelease != null)
             {
-                return Ok(_mapper.Map<IEnumerable<NewsReleaseLog>, IEnumerable<NewsReleaseLogViewModel>>(release.NewsReleaseLog));
+                return Ok(_mapper.Map<IEnumerable<Models.NewsReleaseLog>>(dbRelease.NewsReleaseLog));
             }
             return NotFound();
         }
 
         [HttpGet("{id}")]
+        [Produces(typeof(Models.NewsReleaseLog))]
         public IActionResult Get(string newsReleaseId, int id)
         {
-            var release = _repository.GetReleaseByKey(newsReleaseId);
-            if (release != null)
+            var dbRelease = _repository.GetReleaseByKey(newsReleaseId);
+            if (dbRelease != null)
             {
-                var log = release.NewsReleaseLog.Where(i => i.Id == id).FirstOrDefault();
-                if (log != null)
+                var dbLog = dbRelease.NewsReleaseLog.Where(i => i.Id == id).FirstOrDefault();
+                if (dbLog != null)
                 {
-                    return Ok(_mapper.Map<NewsReleaseLog, NewsReleaseLogViewModel>(log));
+                    return Ok(_mapper.Map<Models.NewsReleaseLog>(dbLog));
                 }
             }
             return NotFound();

@@ -98,12 +98,12 @@ namespace Gcpe.Hub.API
         }
 
         private class OperationIdCorrectionFilter : IOperationFilter
-        { // Posts_GetLatest instead of ApiPostsLatestByIndexKindByIndexKeyGet
+        { // GetActivity() instead of ApiActivitiesByIdGet()
             public void Apply(Operation operation, OperationFilterContext context)
             {
                 if (context.ApiDescription.ActionDescriptor is ControllerActionDescriptor actionDescriptor)
                 {
-                    operation.OperationId = actionDescriptor.ControllerName + "_" + actionDescriptor.ActionName;
+                    operation.OperationId = actionDescriptor.ActionName;
                 }
             }
         }

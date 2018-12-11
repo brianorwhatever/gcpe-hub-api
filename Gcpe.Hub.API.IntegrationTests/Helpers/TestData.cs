@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using Bogus;
-using Gcpe.Hub.API.ViewModels;
 using Gcpe.Hub.Data.Entity;
 using Newtonsoft.Json;
 
@@ -78,7 +77,7 @@ namespace Gcpe.Hub.API.IntegrationTests
 
         public static StringContent CreateSerializedSocialMediaPost(string url, int sortOrder)
         {
-            var post = new SocialMediaPostViewModel {
+            var post = new Models.SocialMediaPost {
                 SortOrder = sortOrder,
                 Url = url
             };
@@ -88,7 +87,7 @@ namespace Gcpe.Hub.API.IntegrationTests
         public static StringContent CreateSerializedMessage(string title, string description,
             int sortOrder, bool isPublished = true, bool isHighlighted = false)
         {
-            var message = new MessageViewModel {
+            var message = new Models.Message {
                 Title = title,
                 Description = description,
                 SortOrder = sortOrder,

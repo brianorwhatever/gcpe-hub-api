@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.API.Data;
 using Gcpe.Hub.API.Helpers;
-using Gcpe.Hub.API.ViewModels;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -53,44 +53,46 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to get releases: {ex}");
-                return BadRequest("Failed to get releases");
+                return this.BadRequest(_logger, "Failed to get releases", ex);
             }
         }
 
         [HttpGet("{id}", Name = "GetRelease")]
-        [ProducesResponseType(200)]
+        [Produces(typeof(Models.NewsRelease))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         public IActionResult GetById(string id)
         {
             try
             {
-                var release = _repository.GetReleaseByKey(id);
+                var dbRelease = _repository.GetReleaseByKey(id);
 
-                if (release != null)
+                if (dbRelease != null)
                 {
-                    return Ok(_mapper.Map<NewsRelease, NewsReleaseViewModel>(release));
+                    return Ok(_mapper.Map<Models.NewsRelease>(dbRelease));
                 }
                 else return NotFound();
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to get release: {ex}");
-                return BadRequest("Failed to get release");
+                return this.BadRequest(_logger, "Failed to get release", ex);
             }
         }
 
         [HttpPost]
         [ProducesResponseType(201)]
         [ProducesResponseType(400)]
-        public IActionResult Post([FromBody]NewsReleaseViewModel model)
+        public IActionResult Post([FromBody]Models.NewsRelease release)
         {
             try
             {
-                var newRelease = _mapper.Map<NewsReleaseViewModel, NewsRelease>(model);
+                if (release == null)
+                {
+                    throw new ValidationException();
+                }
+                var newDbRelease = _mapper.Map<Models.NewsRelease>(release);
 
-                _repository.AddEntity(newRelease);
+                _repository.AddEntity(newDbRelease);
                 // can assume that this always works against an in memory dataset
                 return StatusCode(201);
 
@@ -103,34 +105,32 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to save a new release: {ex}");
+                return this.BadRequest(_logger, "Failed to save a new release", ex);
             }
-
-            return BadRequest("Failed to save new release");
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(200)]
+        [Produces(typeof(Models.NewsRelease))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public IActionResult Put(string id, [FromBody] NewsReleaseViewModel model)
+        public IActionResult Put(string id, [FromBody] Models.NewsRelease release)
         {
             try
             {
-                if (_repository.GetReleaseByKey(id) == null)
+                var dbRelease = _repository.GetReleaseByKey(id);
+                if (dbRelease == null)
                 {
                     return NotFound($"Could not find a release with an id of {id}");
                 }
-                var release = _mapper.Map<NewsReleaseViewModel, NewsRelease>(model);
-                _repository.Update(id, release);
-                return Ok(model);
+                dbRelease = _mapper.Map(release, dbRelease);
+                dbRelease.Timestamp = DateTimeOffset.Now;
+                _repository.Update(id, dbRelease);
+                return Ok(release);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                return this.BadRequest(_logger, "Couldn't update release", ex);
             }
-
-            return BadRequest("Couldn't update release");
         }
 
         [HttpDelete("{id}")]
@@ -140,20 +140,18 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var oldRelease = _repository.GetReleaseByKey(id);
-                if (oldRelease == null)
+                var dbRelease = _repository.GetReleaseByKey(id);
+                if (dbRelease == null)
                 {
                     return NotFound($"Could not find release with id of {id}");
                 }
-                _repository.Delete(oldRelease);
+                _repository.Delete(dbRelease);
                 return Ok();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
+                return this.BadRequest(_logger, "Could not delete release", ex);
             }
-
-            return BadRequest("Could not delete release");
         }
 
     }

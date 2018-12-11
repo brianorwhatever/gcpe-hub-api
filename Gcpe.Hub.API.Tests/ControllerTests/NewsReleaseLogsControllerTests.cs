@@ -5,7 +5,6 @@ using AutoMapper;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
 using Gcpe.Hub.API.Data;
-using Gcpe.Hub.API.ViewModels;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
     {
         private readonly NewsRelease _expectedModelReturn;
         private Mock<ILogger<NewsReleaseLogsController>> _logger;
-        private Mock<IMapper> _mapper;
+        private IMapper _mapper;
 
         public NewsReleaseLogsControllerTests()
         {
@@ -27,7 +26,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             _expectedModelReturn = TestData.TestNewsRelease;
             _logger = new Mock<ILogger<NewsReleaseLogsController>>();
-            _mapper = CreateMapper();
+            var mockMapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new MappingProfile());
+            });
+            _mapper = mockMapper.CreateMapper();
         }
 
         private Mock<IRepository> CreateDataStore()
@@ -36,41 +39,6 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             dataStore.Setup(r => r.GetReleaseByKey("0")).Returns(() => _expectedModelReturn);
             dataStore.Setup(r => r.GetReleaseByKey(It.IsNotIn("0"))).Returns(() => null);
             return dataStore;
-        }
-
-        // For unit testing, we are only interested in the following properties:
-        // - Id
-        // - ReleaseId
-        // - Description
-        // - DateTime
-        private Mock<IMapper> CreateMapper()
-        {
-            Func<NewsReleaseLog, NewsReleaseLogViewModel> toViewModel = (NewsReleaseLog entity) => new NewsReleaseLogViewModel
-            {
-                Id = entity.Id,
-                Description = entity.Description,
-                DateTime = entity.DateTime,
-                ReleaseId = entity.ReleaseId
-            };
-
-            Func<NewsReleaseLogViewModel, NewsReleaseLog> fromViewModel = (NewsReleaseLogViewModel data) => new NewsReleaseLog
-            {
-                Id = data.Id,
-                Description = data.Description,
-                DateTime = data.DateTime,
-                ReleaseId = data.ReleaseId
-            };
-
-            var mapper = new Mock<IMapper>();
-            mapper.Setup(m => m.Map<NewsReleaseLog, NewsReleaseLogViewModel>(It.IsAny<NewsReleaseLog>())).Returns(toViewModel);
-            mapper.Setup(m => m.Map<NewsReleaseLogViewModel, NewsReleaseLog>(It.IsAny<NewsReleaseLogViewModel>())).Returns(fromViewModel);
-            // map collections as well...
-            mapper.Setup(m => m.Map<IEnumerable<NewsReleaseLog>, IEnumerable<NewsReleaseLogViewModel>>(It.IsAny<IEnumerable<NewsReleaseLog>>()))
-                .Returns((IEnumerable<NewsReleaseLog> entities) => entities.Select(toViewModel));
-            mapper.Setup(m => m.Map<IEnumerable<NewsReleaseLogViewModel>, IEnumerable<NewsReleaseLog>>(It.IsAny<IEnumerable<NewsReleaseLogViewModel>>()))
-                .Returns((IEnumerable<NewsReleaseLogViewModel> data) => data.Select(fromViewModel));
-
-            return mapper;
         }
 
         [Fact]
@@ -82,7 +50,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var expectedCount = _expectedModelReturn.NewsReleaseLog.Count;
             var expectedLogEntry = _expectedModelReturn.NewsReleaseLog.FirstOrDefault();
             var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper.Object);
+            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
@@ -93,12 +61,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Assert
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType(typeof(OkObjectResult), "because the read operation should go smoothly");
-            var actual = ((result as OkObjectResult).Value as IEnumerable<NewsReleaseLogViewModel>);
+            var actual = ((result as OkObjectResult).Value as IEnumerable<Models.NewsReleaseLog>);
             var actualLogEntry = actual.FirstOrDefault();
 
             actual.Count().Should().Be(expectedCount);
-            actualLogEntry.Id.Should().Be(expectedLogEntry.Id);
-            actualLogEntry.ReleaseId.Should().Be(expectedLogEntry.ReleaseId);
+            actualLogEntry.ReleaseKey.Should().Be(expectedLogEntry.Release.Key);
             actualLogEntry.Description.Should().Be(expectedLogEntry.Description);
         }
 
@@ -109,7 +76,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
             var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper.Object);
+            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
@@ -129,7 +96,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
             var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper.Object);
+            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
@@ -151,7 +118,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
             var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper.Object);
+            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act

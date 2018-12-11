@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace Gcpe.Hub.API.ViewModels
+namespace Gcpe.Hub.API.Models
 {
-    public class MessageViewModel
+    public class Message
     {
         public Guid Id { get; set; }
         [Required]

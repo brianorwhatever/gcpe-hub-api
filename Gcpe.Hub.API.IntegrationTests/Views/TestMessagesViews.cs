@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Gcpe.Hub.API.ViewModels;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -26,7 +25,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         {
             var createResponse = await _client.PostAsync("/api/messages", testMessage);
             var createBody = await createResponse.Content.ReadAsStringAsync();
-            var createdPost = JsonConvert.DeserializeObject<MessageViewModel>(createBody);
+            var createdPost = JsonConvert.DeserializeObject<Models.Message>(createBody);
             return createdPost.Id;
         }
 
@@ -45,7 +44,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             var response = await _client.GetAsync("/api/messages");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var models = JsonConvert.DeserializeObject<MessageViewModel[]>(body).Where(m => m.Title == "Sorted Test Message");
+            var models = JsonConvert.DeserializeObject<Models.Message[]>(body).Where(m => m.Title == "Sorted Test Message");
 
             for (int i = 0; i < models.Count() - 1; i++)
             {
@@ -60,7 +59,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             var createResponse = await _client.PostAsync("/api/messages", newMessage);
             createResponse.EnsureSuccessStatusCode();
             var createBody = await createResponse.Content.ReadAsStringAsync();
-            var messageResult = JsonConvert.DeserializeObject<MessageViewModel>(createBody);
+            var messageResult = JsonConvert.DeserializeObject<Models.Message>(createBody);
 
             messageResult.Title.Should().Be("Test title!");
             messageResult.Description.Should().Be("test description!");
@@ -82,7 +81,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             var response = await _client.PostAsync("/api/messages", noDescMessage);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var messageResult = JsonConvert.DeserializeObject<MessageViewModel>(body);
+            var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
 
             messageResult.Title.Should().Be("Title");
             messageResult.Description.Should().BeNull();
@@ -96,7 +95,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             var response = await _client.GetAsync($"/api/Messages/{id}");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var messageResult = JsonConvert.DeserializeObject<MessageViewModel>(body);
+            var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
 
             messageResult.Id.Should().Be(id);
         }
@@ -118,7 +117,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             var response = await _client.PutAsync($"/api/messages/{id}", newTestMessage);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var messageResult = JsonConvert.DeserializeObject<MessageViewModel>(body);
+            var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
 
             messageResult.Title.Should().Be("new title");
             messageResult.Description.Should().Be("new description");
@@ -135,7 +134,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             var response = await _client.PutAsync($"/api/messages/{id}", content);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var messageResult = JsonConvert.DeserializeObject<MessageViewModel>(body);
+            var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
 
             messageResult.Title.Should().Be("new title");
             messageResult.Description.Should().Be(null);

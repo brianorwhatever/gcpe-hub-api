@@ -57,11 +57,9 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             get
             {
-                var releaseId = Guid.NewGuid();
-
-                return new NewsRelease
+                var release = new NewsRelease
                 {
-                    Id = releaseId,
+                    Id = Guid.NewGuid(),
                     Key = "2018PREM1234-123456",
                     Year = 2018,
                     Timestamp = DateTime.Now,
@@ -71,29 +69,54 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                     IsActive = true,
                     IsCommitted = true,
                     Keywords = "lorem, ipsum, dolor",
-                    NewsReleaseLog = new List<NewsReleaseLog>
+                };
+                release.NewsReleaseLog = new List<NewsReleaseLog>
+                {
+                    new NewsReleaseLog
                     {
-                        new NewsReleaseLog
-                        {
-                            Id = 1,
-                            Description = "Created by Jane Doe",
-                            DateTime = DateTime.Now,
-                            ReleaseId = releaseId
-                        },
-                        new NewsReleaseLog {
-                            Id = 2,
-                            Description = "Edited by John Doe",
-                            DateTime = DateTime.Now,
-                            ReleaseId = releaseId
-                        }
+                        Id = 1,
+                        Description = "Created by Jane Doe",
+                        DateTime = DateTime.Now,
+                        Release = release
+                    },
+                    new NewsReleaseLog {
+                        Id = 2,
+                        Description = "Edited by John Doe",
+                        DateTime = DateTime.Now,
+                        Release = release
                     }
                 };
+                return release;
             }
         }
-        public static Message CreateMessage(string title, string description,
+        public static Activity CreateDbActivity(string title, string details, int id)
+        {
+            return new Activity
+            {
+                Title = title,
+                Details = details,
+                IsActive = true,
+                IsConfirmed = true,
+                Id = id,
+                StartDateTime = DateTime.Today.AddDays(3),
+                ActivityCategories = new List<ActivityCategories>
+                {
+                    new ActivityCategories
+                    {
+                         ActivityId = id,
+                         Category = new Category
+                         {
+                            Name = "Release Only (No Event)"
+                         }
+                    }
+                }
+            };
+        }
+
+        public static Message CreateDbMessage(string title, string description,
             int sortOrder, bool isPublished = false, bool isHighlighted = false)
         {
-            var message = new Message
+            return new Message
             {
                 Id = Guid.Empty,
                 Title = title,
@@ -103,13 +126,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 IsHighlighted = isHighlighted,
                 Timestamp = DateTime.Now
             };
-
-            return message;
         }
 
-        public static SocialMediaPost CreateSocialMediaPost(string url, int sortOrder = 0)
+        public static SocialMediaPost CreateDbSocialMediaPost(string url, int sortOrder = 0)
         {
-            var post = new SocialMediaPost
+            return new SocialMediaPost
             {
                 Id = Guid.Empty,
                 Url = url,
@@ -117,8 +138,6 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 Timestamp = DateTime.Now,
                 IsActive = true
             };
-
-            return post;
         }
     }
 }

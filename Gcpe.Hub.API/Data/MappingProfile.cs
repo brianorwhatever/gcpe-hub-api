@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using AutoMapper;
-using Gcpe.Hub.API.ViewModels;
 using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.Data
@@ -9,21 +8,21 @@ namespace Gcpe.Hub.API.Data
     {
         public MappingProfile()
         {
-            CreateMap<Activity, ActivityViewModel>()
+            CreateMap<Activity, Models.Activity>()
                 .ForMember(dest => dest.MinistriesSharedWith, opt => opt.MapFrom(src => src.ActivitySharedWith.Select(sw => sw.Ministry.Key)))
                 .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)))
                 .ReverseMap();
 
-            CreateMap<NewsRelease, NewsReleaseViewModel>()
+            CreateMap<NewsRelease, Models.NewsRelease>()
                 .ReverseMap();
 
-            CreateMap<NewsReleaseLog, NewsReleaseLogViewModel>()
+            CreateMap<NewsReleaseLog, Models.NewsReleaseLog>()
                 .ReverseMap();
 
-            CreateMap<Message, MessageViewModel>()
+            CreateMap<Message, Models.Message>()
                 .ReverseMap();
 
-            CreateMap<SocialMediaPost, SocialMediaPostViewModel>()
+            CreateMap<SocialMediaPost, Models.SocialMediaPost>()
                 .ReverseMap();
         }
     }

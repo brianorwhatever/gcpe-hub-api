@@ -53,7 +53,7 @@ namespace Gcpe.Hub.API.IntegrationTests
             var response = await Client.GetAsync("/api/newsreleases");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var deserializedBody = JsonConvert.DeserializeObject<Hub.API.ViewModels.NewsReleaseViewModel[]>(body);
+            var deserializedBody = JsonConvert.DeserializeObject<Models.NewsRelease[]>(body);
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -70,7 +70,7 @@ namespace Gcpe.Hub.API.IntegrationTests
             var response = await Client.GetAsync("/api/newsreleases/0");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var deserializedBody = JsonConvert.DeserializeObject<Hub.API.ViewModels.NewsReleaseViewModel>(body);
+            var deserializedBody = JsonConvert.DeserializeObject<Models.NewsRelease>(body);
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
