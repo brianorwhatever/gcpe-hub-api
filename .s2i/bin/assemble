@@ -119,6 +119,7 @@ if [ -n "$SONAR_TOKEN" ]; then
   	dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN
 elif [ -n "$SNYK_TOKEN" ]; then
 	# run the snyk scan.  Note SNYK_TOKEN is automatically used by the snyk scanner for authentication.
+	echo "---> Running Snyk Scan..."
 	snyk test --file="$DOTNET_STARTUP_PROJECT"
 elif [ -n "$DOTNET_TEST" ]; then
 	dotnet test "$DOTNET_STARTUP_PROJECT" -f "$DOTNET_FRAMEWORK" -c "$DOTNET_CONFIGURATION"
