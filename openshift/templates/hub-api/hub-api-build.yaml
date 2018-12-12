@@ -87,12 +87,12 @@ parameters:
     displayName: Source Image Name
     description: The name of the source image.
     required: true
-    value: registry.access.redhat.com/dotnet/dotnet-21-rhel7
+    value: registry.access.redhat.com/dotnet/dotnet-22-rhel7
   - name: SOURCE_IMAGE_TAG
     displayName: Source Image Tag
     description: The tag of the source image.
     required: true
-    value: 2.1-10
+    value: 2.2-1
   - name: DOTNET_STARTUP_PROJECT
     displayName: DotNet Startup Project
     description: The path to the startup project for the .Net application.
