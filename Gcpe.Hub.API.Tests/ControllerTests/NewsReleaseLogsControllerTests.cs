@@ -4,9 +4,10 @@ using System.Linq;
 using AutoMapper;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
-using Gcpe.Hub.API.Data;
+using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -15,53 +16,54 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
 {
     public class NewsReleaseLogsControllerTests
     {
-        private readonly NewsRelease _expectedModelReturn;
-        private Mock<ILogger<NewsReleaseLogsController>> _logger;
-        private IMapper _mapper;
+        private Mock<ILogger<NewsReleaseLogsController>> logger;
+        private HubDbContext context;
+        private IMapper mapper;
+        private NewsReleaseLogsController controller;
+        private DbContextOptions<HubDbContext> options;
 
         public NewsReleaseLogsControllerTests()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            _expectedModelReturn = TestData.TestNewsRelease;
-            _logger = new Mock<ILogger<NewsReleaseLogsController>>();
+            options = new DbContextOptionsBuilder<HubDbContext>()
+                      .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                      .Options;
+            context = new HubDbContext(options);
+            logger = new Mock<ILogger<NewsReleaseLogsController>>();
             var mockMapper = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new MappingProfile());
             });
-            _mapper = mockMapper.CreateMapper();
-        }
-
-        private Mock<IRepository> CreateDataStore()
-        {
-            var dataStore = new Mock<IRepository>();
-            dataStore.Setup(r => r.GetReleaseByKey("0")).Returns(() => _expectedModelReturn);
-            dataStore.Setup(r => r.GetReleaseByKey(It.IsNotIn("0"))).Returns(() => null);
-            return dataStore;
+            mapper = mockMapper.CreateMapper();
+            controller = new NewsReleaseLogsController(context, logger.Object, mapper);
         }
 
         [Fact]
-        public void GetAll_ShouldReturnSuccess()
+        public void GetPostLogs_ShouldReturnSuccess()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var expectedCount = _expectedModelReturn.NewsReleaseLog.Count;
-            var expectedLogEntry = _expectedModelReturn.NewsReleaseLog.FirstOrDefault();
-            var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
+            NewsRelease post = TestData.CreateDbPost();
+            context.NewsRelease.Add(post);
+            post.NewsReleaseLog = TestData.CreateDbPostLogs(post);
+            var expectedLogEntry = post.NewsReleaseLog.FirstOrDefault();
+            var expectedCount = post.NewsReleaseLog.Count;
+            context.NewsReleaseLog.AddRange(post.NewsReleaseLog);
+            context.SaveChanges();
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.GetAll("0");
+            var result = controller.GetPostLogs(post.Key) as ObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType(typeof(OkObjectResult), "because the read operation should go smoothly");
-            var actual = ((result as OkObjectResult).Value as IEnumerable<Models.NewsReleaseLog>);
+            var actual = result.Value as IEnumerable<Models.NewsReleaseLog>;
             var actualLogEntry = actual.FirstOrDefault();
 
             actual.Count().Should().Be(expectedCount);
@@ -70,65 +72,48 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         }
 
         [Fact]
-        public void GetAll_ShouldReturnNotFound_WhenGivenInvalidReleaseId()
+        public void GetPostLogs_ShouldReturnNotFound_WhenGivenInvalidReleaseId()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.GetAll("-1");  // does not exist...
+            var result = controller.GetPostLogs("-1");  // does not exist...
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
             //-----------------------------------------------------------------------------------------------------------
-            result.Should().BeOfType(typeof(NotFoundResult), "because an invalid Id should not yield a result");
+            result.Should().BeOfType(typeof(NotFoundResult), "because an invalid Key should not yield a result");
         }
 
         [Fact]
-        public void Get_ShouldReturnSuccess()
+        public void Post_ShouldReturnSuccess()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
+            var releaseLogToCreate = new Models.NewsReleaseLog
+            {
+                Description = "toto",
+                DateTime = DateTime.Now
+            };
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.Get("0", 1);
+            var result = controller.AddPostLog(releaseLogToCreate) as ObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
             //-----------------------------------------------------------------------------------------------------------
-            result.Should().BeOfType(typeof(OkObjectResult), "because the read operation should go smoothly");
-        }
+            result.Should().BeOfType<CreatedAtRouteResult>("because the create operation should go smoothly");
+            result.StatusCode.Should().Be(201, "because HTTP Status 201 should be returned upon creation of new entity");
+            var model = result.Value as Models.NewsReleaseLog;
+            model.Description.Should().Be("toto");
 
-        [Theory]
-        [InlineData("0", -1, "because an invalid LogId should not yield a result")]
-        [InlineData("-1", 1, "because an invalid ReleaseId should not yield a result")]
-        public void Get_ShouldReturnNotFound_WhenGivenInvalidParameters(string releaseId, int logId, string because = null)
-        {
-            //-----------------------------------------------------------------------------------------------------------
-            // Arrange
-            //-----------------------------------------------------------------------------------------------------------
-            var mockRepository = CreateDataStore();
-            var controller = new NewsReleaseLogsController(mockRepository.Object, _logger.Object, _mapper);
-
-            //-----------------------------------------------------------------------------------------------------------
-            // Act
-            //-----------------------------------------------------------------------------------------------------------
-            var result = controller.Get(releaseId, logId);  // does not exist...
-
-            //-----------------------------------------------------------------------------------------------------------
-            // Assert
-            //-----------------------------------------------------------------------------------------------------------
-            result.Should().BeOfType(typeof(NotFoundResult), because);
         }
     }
 }

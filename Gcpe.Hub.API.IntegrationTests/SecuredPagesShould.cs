@@ -1,15 +1,14 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using Xunit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Gcpe.Hub.API;
+using Xunit;
 
 namespace Gcpe.Hub.API.IntegrationTests
 {
     public class SecuredPagesShould : BaseWebApiTest
     {
-        public SecuredPagesShould(WebApplicationFactory<Startup> factory) : base(factory)
+        public SecuredPagesShould(CustomWebApplicationFactory<Startup> factory) : base(factory)
         {
         }
 

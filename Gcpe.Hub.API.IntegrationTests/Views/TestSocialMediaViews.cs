@@ -12,7 +12,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
     {
         private readonly CustomWebApplicationFactory<Startup> _factory;
         public readonly HttpClient _client;
-        public StringContent testPost = TestData.CreateSerializedSocialMediaPost(url: "http://facebook.com/post/123", sortOrder: 0);
+        public StringContent testPost = TestData.CreateSocialMediaPost(url: "http://facebook.com/post/123", sortOrder: 0);
 
         public TestSocialMediaViews(CustomWebApplicationFactory<Startup> factory)
         {
@@ -34,7 +34,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             for (var i = 0; i < 5; i++)
             {
                 int sortOrder = 5 - i;
-                var newPost = TestData.CreateSerializedSocialMediaPost("http://facebook.com/post/123", sortOrder);
+                var newPost = TestData.CreateSocialMediaPost("http://facebook.com/post/123", sortOrder);
 
                 var createResponse = await _client.PostAsync("/api/socialmediaposts", newPost);
                 createResponse.EnsureSuccessStatusCode();
@@ -59,7 +59,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         public async Task Create_EndpointShouldReturnSuccessAndCorrectPost()
         {
             var url = "http://facebook.com/post/123";
-            var stringContent = TestData.CreateSerializedSocialMediaPost(url, 0);
+            var stringContent = TestData.CreateSocialMediaPost(url, 0);
 
             var response = await _client.PostAsync("/api/socialmediaposts", stringContent);
             response.EnsureSuccessStatusCode();
@@ -111,7 +111,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             string url = "http://twitter.com/post/123";
             var id = await _PostSocialMediaPost();
 
-            var newPost = TestData.CreateSerializedSocialMediaPost(url, sortOrder);
+            var newPost = TestData.CreateSocialMediaPost(url, sortOrder);
             var response = await _client.PutAsync($"/api/socialmediaposts/{id}", newPost);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();

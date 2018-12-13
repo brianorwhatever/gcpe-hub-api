@@ -29,6 +29,14 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
         }
 
+        internal static IQueryable<Activity> QueryAll(HubDbContext dbContext)
+        {
+            return dbContext.Activity.Include(a => a.ContactMinistry).Include(a => a.City)
+                .Include(a => a.ActivityCategories).ThenInclude(ac => ac.Category)
+                .Include(a => a.ActivitySharedWith).ThenInclude(sw => sw.Ministry);
+        }
+
+
         [HttpGet("Forecast/{numDays}")]
         [Produces(typeof(IEnumerable<Models.Activity>))]
         [ProducesResponseType(400)]
@@ -37,9 +45,7 @@ namespace Gcpe.Hub.API.Controllers
             try
             {
                 var today = DateTime.Today;
-                IList<Models.Activity> forecast = dbContext.Activity.Include(a => a.ContactMinistry).Include(a => a.City)
-                    .Include(a => a.ActivityCategories).ThenInclude(ac => ac.Category)
-                    .Include(a => a.ActivitySharedWith).ThenInclude(sw => sw.Ministry)
+                IList<Models.Activity> forecast = QueryAll(dbContext)
                     .Where(a => a.StartDateTime >= today && a.StartDateTime <= today.AddDays(numDays) && !a.IsConfidential && a.IsConfirmed && a.IsActive &&
 //                               a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-")) &&
                                a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")))
@@ -61,10 +67,7 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var dbActivity = dbContext.Activity.Include(a => a.ContactMinistry).Include(a => a.City)
-                    .Include(a => a.ActivityCategories).ThenInclude(ac => ac.Category)
-                    .Include(a => a.ActivitySharedWith).ThenInclude(sw => sw.Ministry)
-                    .FirstOrDefault(a => a.Id == id);
+                var dbActivity = QueryAll(dbContext).FirstOrDefault(a => a.Id == id);
 
                 if (dbActivity != null)
                 {
@@ -85,9 +88,11 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                dbContext.Activity.Add(mapper.Map<Activity>(activity));
+                Activity dbActivity = new Activity { CreatedDateTime = DateTime.Now };
+                dbActivity.UpdateFromModel(activity, dbContext);
+                dbContext.Activity.Add(dbActivity);
                 dbContext.SaveChanges();
-                return CreatedAtRoute("GetActivity", new { id = activity.Id }, activity);
+                return CreatedAtRoute("GetActivity", new { id = activity.Id }, mapper.Map<Models.Activity>(dbActivity));
             }
             catch (Exception ex)
             {
@@ -108,12 +113,10 @@ namespace Gcpe.Hub.API.Controllers
                 {
                     return NotFound($"Could not find an activity with an id of {id}");
                 }
-                dbActivity = mapper.Map(activity, dbActivity);
-                dbActivity.LastUpdatedDateTime = DateTime.Now;
-                dbActivity.Id = id;
+                dbActivity.UpdateFromModel(activity, dbContext);
                 dbContext.Activity.Update(dbActivity);
                 dbContext.SaveChanges();
-                return Ok(activity);
+                return Ok(mapper.Map<Models.Activity>(dbActivity));
             }
             catch (Exception ex)
             {

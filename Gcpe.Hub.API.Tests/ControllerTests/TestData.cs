@@ -6,89 +6,58 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
 {
     public static class TestData
     {
-        public static List<NewsRelease> TestNewsReleases
+        public static NewsRelease CreateDbPost(string key = "2018PREM1234-123456", string pageTitle = "Test title")
         {
-            get
+            var release = new NewsRelease
             {
-                var releases = new List<NewsRelease>();
+                Id = Guid.NewGuid(),
+                Key = key,
+                ReleaseType = ReleaseType.Story,
+                Timestamp = DateTime.Now,
+                ReleaseDateTime = DateTime.Now,
+                PublishDateTime = DateTime.Now,
+                IsPublished = true,
+                IsActive = true,
+                IsCommitted = true,
+                Ministry = new Ministry { Id = Guid.NewGuid(), Key = "environment", DisplayName = "Environment" },
+                NewsReleaseLanguage = new List<NewsReleaseLanguage>{new NewsReleaseLanguage { Summary = "summary", LanguageId = 4105 } }
+            };
 
-                for (var i = 0; i < 10; i++)
-                {
-                    var releaseId = Guid.NewGuid();
-
-                    var release = new NewsRelease
-                    {
-                        Id = releaseId,
-                        Key = $"2018PREM{i}-{i}00000",
-                        Year = 2018,
-                        Timestamp = DateTime.Now,
-                        ReleaseDateTime = DateTime.Now,
-                        PublishDateTime = DateTime.Now,
-                        IsPublished = true,
-                        IsActive = true,
-                        IsCommitted = true,
-                        Keywords = "lorem, ipsum, dolor",
-                        NewsReleaseLog = new List<NewsReleaseLog>
-                    {
-                        new NewsReleaseLog
-                        {
-                            Id = 1,
-                            Description = "Created by Jane Doe",
-                            DateTime = DateTime.Now,
-                            ReleaseId = releaseId
-                        },
-                        new NewsReleaseLog {
-                            Id = 2,
-                            Description = "Edited by John Doe",
-                            DateTime = DateTime.Now,
-                            ReleaseId = releaseId
-                        }
-                    }
-                    };
-
-                    releases.Add(release);
-                }
-
-                return releases;
-            }
-        }
-
-        public static NewsRelease TestNewsRelease
-        {
-            get
+            release.NewsReleaseDocument = new List<NewsReleaseDocument>
             {
-                var release = new NewsRelease
+                new NewsReleaseDocument
                 {
                     Id = Guid.NewGuid(),
-                    Key = "2018PREM1234-123456",
-                    Year = 2018,
-                    Timestamp = DateTime.Now,
-                    ReleaseDateTime = DateTime.Now,
-                    PublishDateTime = DateTime.Now,
-                    IsPublished = true,
-                    IsActive = true,
-                    IsCommitted = true,
-                    Keywords = "lorem, ipsum, dolor",
-                };
-                release.NewsReleaseLog = new List<NewsReleaseLog>
-                {
-                    new NewsReleaseLog
+                    Release = release,
+                    NewsReleaseDocumentLanguage = new List<NewsReleaseDocumentLanguage>
                     {
-                        Id = 1,
-                        Description = "Created by Jane Doe",
-                        DateTime = DateTime.Now,
-                        Release = release
-                    },
-                    new NewsReleaseLog {
-                        Id = 2,
-                        Description = "Edited by John Doe",
-                        DateTime = DateTime.Now,
-                        Release = release
+                        new NewsReleaseDocumentLanguage { PageTitle = pageTitle }
                     }
-                };
-                return release;
-            }
+                }
+            };
+            return release;
         }
+
+        public static ICollection<NewsReleaseLog> CreateDbPostLogs(NewsRelease release, string author = "Jane Doe")
+        {
+            return new List<NewsReleaseLog>
+            {
+                new NewsReleaseLog
+                {
+                    Id = 1,
+                    Description = "Created by " + author,
+                    DateTime = DateTime.Now.AddDays(-1),
+                    Release = release
+                },
+                new NewsReleaseLog {
+                    Id = 2,
+                    Description = "Edited by " + author,
+                    DateTime = DateTime.Now,
+                    Release = release
+                }
+            };
+        }
+
         public static Activity CreateDbActivity(string title, string details, int id)
         {
             return new Activity
@@ -114,11 +83,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         }
 
         public static Message CreateDbMessage(string title, string description,
-            int sortOrder, bool isPublished = false, bool isHighlighted = false)
+            int sortOrder, Guid? id = null, bool isPublished = false, bool isHighlighted = false)
         {
             return new Message
             {
-                Id = Guid.Empty,
+                Id = id ?? Guid.Empty,
                 Title = title,
                 Description = description,
                 SortOrder = sortOrder,
@@ -128,15 +97,15 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             };
         }
 
-        public static SocialMediaPost CreateDbSocialMediaPost(string url, int sortOrder = 0)
+        public static SocialMediaPost CreateDbSocialMediaPost(string url, Guid? id = null, bool isActive = true, int sortOrder = 0)
         {
             return new SocialMediaPost
             {
-                Id = Guid.Empty,
+                Id = id ?? Guid.Empty,
                 Url = url,
                 SortOrder = sortOrder,
                 Timestamp = DateTime.Now,
-                IsActive = true
+                IsActive = isActive
             };
         }
     }

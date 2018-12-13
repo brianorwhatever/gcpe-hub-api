@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Gcpe.Hub.API.Data;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -33,13 +32,6 @@ namespace Gcpe.Hub.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddAutoMapper();
-
-            // services.AddTransient<Seeder>(); uncomment to seed the database
-            // services.AddScoped<IRepository, Repository>(); uncomment for use with the database
-
-            // dependency injection for interfacing with in memory data
-            services.AddSingleton<IDataContext, InMemoryDataContext>();
-            services.AddSingleton<IRepository, InMemoryRepository>();
 
             services.AddDbContext<HubDbContext>(options => options.UseSqlServer(Configuration["HubDbContext"])
                 .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning)));
@@ -121,8 +113,6 @@ namespace Gcpe.Hub.API
             }
 
             // app.UseHttpsRedirection();
-
-            
 
             // temporary CORS fix
             app.UseCors(opts => opts.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());

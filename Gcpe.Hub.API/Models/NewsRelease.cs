@@ -1,32 +1,50 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Gcpe.Hub.API.Models
 {
     public class NewsRelease
     {
+        public class Document
+        {
+            public class DocumentContact
+            {
+                public string Title { get; set; }
+                public string Details { get; set; }
+            }
+
+            public string PageTitle { get; set; }
+
+            public int LanguageId { get; set; }
+
+            public string Headline { get; set; }
+
+            public string Subheadline { get; set; }
+
+            public string BodyHtml { get; set; }
+
+            public string Byline { get; set; }
+
+            public IEnumerable<DocumentContact> Contacts { get; set; }
+        }
+
+        public string Kind { get; set; }
         public System.DateTimeOffset Timestamp { get; set; }
         [Required]
         [MaxLength(255)]
         public string Key { get; set; }
-        public Nullable<int> Year { get; set; }
-        public Nullable<int> YearRelease { get; set; }
-        public Nullable<System.Guid> MinistryId { get; set; }
-        public Nullable<int> MinistryRelease { get; set; }
         public string Reference { get; set; }
-        public Nullable<int> ActivityId { get; set; }
-        public Nullable<System.DateTime> ReleaseDateTime { get; set; }
-        public Nullable<System.DateTimeOffset> PublishDateTime { get; set; }
-        public bool IsPublished { get; set; }
-        // public PublishOptions PublishOptions { get; set; }
-        public bool IsActive { get; set; }
-        public System.Guid CollectionId { get; set; }
+        public string Summary { get; set; }
+        public string Location { get; set; }
+
+        public string LeadMinistryKey { get; set; }
+        public string LeadMinistryName { get; set; }
+        public IEnumerable<string> MinistryKeys { get; set; }
+
+        public DateTimeOffset? PublishDateTime { get; set; }
         public bool IsCommitted { get; set; }
-        public string AtomId { get; set; }
-        public string Keywords { get; set; }
         public string AssetUrl { get; set; }
-        public bool HasMediaAssets { get; set; }
-        // public ReleaseType ReleaseType { get; set; }
-        public string RedirectUrl { get; set; }
+        public IEnumerable<Document> Documents { get; set; }
     }
 }

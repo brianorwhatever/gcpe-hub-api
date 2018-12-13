@@ -4,7 +4,7 @@ using System.Linq;
 using AutoMapper;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
-using Gcpe.Hub.API.Data;
+using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,9 +49,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             for (var i = 0; i < messageCount; i++)
             {
-                var dbMessage = TestData.CreateDbMessage(i.ToString(), "test description", 0, true, false);
-                dbMessage.Id = Guid.NewGuid();
-                context.Message.Add(dbMessage);
+                context.Message.Add(TestData.CreateDbMessage(i.ToString(), "test description", 0, Guid.NewGuid(), true, false));
             }
             context.SaveChanges();
             var controller = new MessagesController(context, logger.Object, mapper);
@@ -74,15 +72,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var unpublishedCount = 2;
             for (var i = 0; i < publishedCount; i++)
             {
-                var testDbMessage = TestData.CreateDbMessage($"published-{i.ToString()}", "test description", 0, true, false);
-                testDbMessage.Id = Guid.NewGuid();
-                context.Message.Add(testDbMessage);
+                context.Message.Add(TestData.CreateDbMessage($"published-{i.ToString()}", "test description", 0, Guid.NewGuid(), true, false));
             }
             for (var i = 0; i < unpublishedCount; i++)
             {
-                var testMessage = TestData.CreateDbMessage($"unpublished-{i.ToString()}", "test description", 0, false, false);
-                testMessage.Id = Guid.NewGuid();
-                context.Message.Add(testMessage);
+                context.Message.Add(TestData.CreateDbMessage($"unpublished-{i.ToString()}", "test description", 0, Guid.NewGuid(), false, false));
             }
             context.SaveChanges();
             var controller = new MessagesController(context, logger.Object, mapper);
@@ -125,8 +119,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         public void Post_ShouldReturnBadRequest()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
-            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0);
-            testDbMessage.Id = Guid.NewGuid();
+            var testDbMessage = TestData.CreateDbMessage("1", "test description", 0, Guid.NewGuid());
 
             var result = controller.AddMessage(mapper.Map<Models.Message>(testDbMessage)) as ObjectResult;
 

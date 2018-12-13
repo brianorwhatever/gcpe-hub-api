@@ -4,7 +4,7 @@ using System.Linq;
 using AutoMapper;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
-using Gcpe.Hub.API.Data;
+using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -103,6 +103,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             var controller = new ActivitiesController(context, logger.Object, mapper);
             var testDbActivity = TestData.CreateDbActivity("test title", "test details", 1);
+            context.Category.AddRange(testDbActivity.ActivityCategories.Select(ac => ac.Category));
+            context.SaveChanges();
 
             var result = controller.AddActivity(mapper.Map<Models.Activity>(testDbActivity)) as ObjectResult;
 
@@ -161,9 +163,12 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var testDbActivity = TestData.CreateDbActivity("test title", "test details", 1);
 
             context.Activity.Add(testDbActivity);
+            context.Category.Add(new Category { Name = "New Category" });
             context.SaveChanges();
+
             var testActivity = mapper.Map<Models.Activity>(testDbActivity);
             testActivity.Title = "New Title!";
+            testActivity.Categories = new string[] { "New Category" };
 
 
             var controller = new ActivitiesController(context, logger.Object, mapper);
@@ -173,6 +178,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             result.StatusCode.Should().Be(200);
             var model = result.Value as Models.Activity;
             model.Title.Should().Be("New Title!");
+            model.Categories.First().Should().Be("New Category");
+
             var DbActivity = context.Activity.Find(testDbActivity.Id);
             DbActivity.Title.Should().Be("New Title!");
         }

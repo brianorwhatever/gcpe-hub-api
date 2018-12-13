@@ -4,7 +4,7 @@ using System.Linq;
 using AutoMapper;
 using FluentAssertions;
 using Gcpe.Hub.API.Controllers;
-using Gcpe.Hub.API.Data;
+using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -46,9 +46,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             for (var i = 0; i < postCount; i++)
             {
-                var testDbPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123", postCount - i);
-                testDbPost.Id = Guid.NewGuid();
-                context.SocialMediaPost.Add(testDbPost);
+                context.SocialMediaPost.Add(TestData.CreateDbSocialMediaPost("http://facebook.com/post/123", Guid.NewGuid(), true, postCount - i));
             }
             context.SaveChanges();
 
@@ -72,10 +70,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         {
             for (var i = 0; i < 3; i++)
             {
-                var testDbPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123");
-                testDbPost.Id = Guid.NewGuid();
-                testDbPost.IsActive = false;
-                context.SocialMediaPost.Add(testDbPost);
+                context.SocialMediaPost.Add(TestData.CreateDbSocialMediaPost("http://facebook.com/post/123", Guid.NewGuid(), false));
             }
             context.SaveChanges();
 
@@ -106,15 +101,14 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         [Fact]
         public void Post_ShouldReturnSuccess()
         {
-            var testUrl = "http://facebook.com/post/123";
-            var result = controller.AddSocialMediaPost(socialMediaPost: mapper.Map<Models.SocialMediaPost>(TestData.CreateDbSocialMediaPost(testUrl)));
-            var createdResult = result as ObjectResult;
+            var testPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123");
+            var createdResult = controller.AddSocialMediaPost(socialMediaPost: mapper.Map<Models.SocialMediaPost>(testPost)) as ObjectResult;
 
             createdResult.Should().BeOfType<CreatedAtRouteResult>();
             createdResult.StatusCode.Should().Be(201);
 
             var model = createdResult.Value as Models.SocialMediaPost;
-            model.Url.Should().Be(TestData.CreateDbSocialMediaPost("http://facebook.com/post/123").Url);
+            model.Url.Should().Be(testPost.Url);
         }
 
 
@@ -209,8 +203,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         [Fact]
         public void Put_ShouldntUpdateDeletedPost()
         {
-            var testDbPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123");
-            testDbPost.IsActive = false;
+            var testDbPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123", null, false);
             context.SocialMediaPost.Add(testDbPost);
             context.SaveChanges();
             var socialMediaPostModel = mapper.Map<Models.SocialMediaPost>(testDbPost);
@@ -247,8 +240,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         [Fact]
         public void Delete_ShouldReturnSuccess()
         {
-            var testDbPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123");
-            testDbPost.Id = Guid.NewGuid();
+            var testDbPost = TestData.CreateDbSocialMediaPost("http://facebook.com/post/123", Guid.NewGuid());
             context.SocialMediaPost.Add(testDbPost);
             context.SaveChanges();
 

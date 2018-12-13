@@ -9,21 +9,17 @@ using Xunit;
 
 namespace Gcpe.Hub.API.IntegrationTests.Views
 {
-    public class TestMessagesViews : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class TestMessagesViews : BaseWebApiTest
     {
-        private readonly CustomWebApplicationFactory<Startup> _factory;
-        public readonly HttpClient _client;
-        public StringContent testMessage = TestData.CreateSerializedMessage("Lorem Title", "Lorem description", 0, true, false);
+        public StringContent testMessage = TestData.CreateMessage("Lorem Title", "Lorem description", 0, true, false);
 
-        public TestMessagesViews(CustomWebApplicationFactory<Startup> factory)
+        public TestMessagesViews(CustomWebApplicationFactory<Startup> factory) : base(factory)
         {
-            _factory = factory;
-            _client = _factory.CreateClient();
         }
 
         private async Task<Guid> _PostMessage()
         {
-            var createResponse = await _client.PostAsync("/api/messages", testMessage);
+            var createResponse = await Client.PostAsync("/api/messages", testMessage);
             var createBody = await createResponse.Content.ReadAsStringAsync();
             var createdPost = JsonConvert.DeserializeObject<Models.Message>(createBody);
             return createdPost.Id;
@@ -35,13 +31,13 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             for (var i = 0; i < 5; i++)
             {
                 int sortOrder = 5 - i;
-                var newMessage = TestData.CreateSerializedMessage("Sorted Test Message", "test description", sortOrder, true, false);
+                var newMessage = TestData.CreateMessage("Sorted Test Message", "test description", sortOrder, true, false);
 
-                var createResponse = await _client.PostAsync("/api/messages", newMessage);
+                var createResponse = await Client.PostAsync("/api/messages", newMessage);
                 createResponse.EnsureSuccessStatusCode();
             }
 
-            var response = await _client.GetAsync("/api/messages");
+            var response = await Client.GetAsync("/api/messages");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
             var models = JsonConvert.DeserializeObject<Models.Message[]>(body).Where(m => m.Title == "Sorted Test Message");
@@ -55,8 +51,8 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Create_EndpointReturnSuccessAndCorrectMessage()
         {
-            var newMessage = TestData.CreateSerializedMessage("Test title!", "test description!", 0, true, false);
-            var createResponse = await _client.PostAsync("/api/messages", newMessage);
+            var newMessage = TestData.CreateMessage("Test title!", "test description!", 0, true, false);
+            var createResponse = await Client.PostAsync("/api/messages", newMessage);
             createResponse.EnsureSuccessStatusCode();
             var createBody = await createResponse.Content.ReadAsStringAsync();
             var messageResult = JsonConvert.DeserializeObject<Models.Message>(createBody);
@@ -68,17 +64,17 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Create_EndpointRequiresTitle()
         {
-            var brokenTestMessage = TestData.CreateSerializedMessage(null, "description", 0, true, false);
-            var response = await _client.PostAsync("/api/messages", brokenTestMessage);
+            var brokenTestMessage = TestData.CreateMessage(null, "description", 0, true, false);
+            var response = await Client.PostAsync("/api/messages", brokenTestMessage);
             response.IsSuccessStatusCode.Should().BeFalse();
         }
 
         [Fact]
         public async Task Create_EndpointDoesntRequireDescription()
         {
-            var noDescMessage = TestData.CreateSerializedMessage("Title", null, 0, true, false);
+            var noDescMessage = TestData.CreateMessage("Title", null, 0, true, false);
 
-            var response = await _client.PostAsync("/api/messages", noDescMessage);
+            var response = await Client.PostAsync("/api/messages", noDescMessage);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
             var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
@@ -92,7 +88,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         {
             Guid id = await _PostMessage();
 
-            var response = await _client.GetAsync($"/api/Messages/{id}");
+            var response = await Client.GetAsync($"/api/Messages/{id}");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
             var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
@@ -103,7 +99,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Get_EndpointReturnsNotFound()
         {
-            var response = await _client.GetAsync($"/api/messages/{Guid.NewGuid()}");
+            var response = await Client.GetAsync($"/api/messages/{Guid.NewGuid()}");
 
             response.IsSuccessStatusCode.Should().BeFalse();
         }
@@ -112,9 +108,9 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         public async Task Put_EndpointReturnSuccessAndCorrectMessage()
         {
             Guid id = await _PostMessage();
-            var newTestMessage = TestData.CreateSerializedMessage("new title", "new description", 10, true, false);
+            var newTestMessage = TestData.CreateMessage("new title", "new description", 10, true, false);
 
-            var response = await _client.PutAsync($"/api/messages/{id}", newTestMessage);
+            var response = await Client.PutAsync($"/api/messages/{id}", newTestMessage);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
             var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
@@ -131,7 +127,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             Guid id = await _PostMessage();
             var content = new StringContent(JsonConvert.SerializeObject(new { Title = "new title" }), Encoding.UTF8, "application/json");
 
-            var response = await _client.PutAsync($"/api/messages/{id}", content);
+            var response = await Client.PutAsync($"/api/messages/{id}", content);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
             var messageResult = JsonConvert.DeserializeObject<Models.Message>(body);
@@ -150,7 +146,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
             Guid id = await _PostMessage();
             
             var content = new StringContent(JsonConvert.SerializeObject(new { }), Encoding.UTF8, "application/json");
-            var response = await _client.PutAsync($"/api/messages/{id}", content);
+            var response = await Client.PutAsync($"/api/messages/{id}", content);
             response.IsSuccessStatusCode.Should().BeFalse();
         }
     }

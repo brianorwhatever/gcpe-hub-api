@@ -1,14 +1,12 @@
 ﻿using System.Threading.Tasks;
-using Xunit;
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Gcpe.Hub.API;
+using Xunit;
 
 namespace Gcpe.Hub.API.IntegrationTests
 {
     public class ApiEndpointsShould : BaseWebApiTest
     {
-        public ApiEndpointsShould(WebApplicationFactory<Startup> factory) : base(factory)
+        public ApiEndpointsShould(CustomWebApplicationFactory<Startup> factory) : base(factory)
         {
         }
 

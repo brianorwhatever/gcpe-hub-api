@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
-using Gcpe.Hub.API.Data;
+using Gcpe.Hub.API.Helpers;
+using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Gcpe.Hub.API.Controllers
@@ -11,47 +14,47 @@ namespace Gcpe.Hub.API.Controllers
     [ApiController]
     public class NewsReleaseLogsController : ControllerBase
     {
-        private readonly IRepository _repository;
-        private readonly ILogger<NewsReleaseLogsController> _logger;
-        private readonly IMapper _mapper;
+        private readonly HubDbContext dbContext;
+        private readonly ILogger<NewsReleaseLogsController> logger;
+        private readonly IMapper mapper;
 
-        public NewsReleaseLogsController(IRepository repository,
+        public NewsReleaseLogsController(HubDbContext dbContext,
           ILogger<NewsReleaseLogsController> logger,
           IMapper mapper)
         {
-            _repository = repository;
-            _logger = logger;
-            _mapper = mapper;
+            this.dbContext = dbContext;
+            this.logger = logger;
+            this.mapper = mapper;
         }
 
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.NewsReleaseLog>))]
-        public IActionResult GetAll(string newsReleaseId)
+        public IActionResult GetPostLogs(string postKey)
         {
-            var dbRelease = _repository.GetReleaseByKey(newsReleaseId);
-            if (dbRelease != null)
+            var dbPost = dbContext.NewsRelease.Include(p => p.NewsReleaseLog).FirstOrDefault(p => p.Key == postKey);
+
+            if (dbPost != null)
             {
-                return Ok(_mapper.Map<IEnumerable<Models.NewsReleaseLog>>(dbRelease.NewsReleaseLog));
+                return Ok(mapper.Map<IEnumerable<Models.NewsReleaseLog>>(dbPost.NewsReleaseLog));
             }
             return NotFound();
         }
 
-        [HttpGet("{id}")]
-        [Produces(typeof(Models.NewsReleaseLog))]
-        public IActionResult Get(string newsReleaseId, int id)
+        [HttpPost]
+        public IActionResult AddPostLog([FromBody]Models.NewsReleaseLog logEntry)
         {
-            var dbRelease = _repository.GetReleaseByKey(newsReleaseId);
-            if (dbRelease != null)
+            try
             {
-                var dbLog = dbRelease.NewsReleaseLog.Where(i => i.Id == id).FirstOrDefault();
-                if (dbLog != null)
-                {
-                    return Ok(_mapper.Map<Models.NewsReleaseLog>(dbLog));
-                }
+                var dbPostLog = new NewsReleaseLog { DateTime = DateTimeOffset.Now};
+                dbContext.Entry(dbPostLog).CurrentValues.SetValues(logEntry);
+                dbContext.NewsReleaseLog.Add(dbPostLog);
+                dbContext.SaveChanges();
+                return CreatedAtRoute("GetPostLogs", new { key = logEntry.ReleaseKey }, mapper.Map<Models.NewsReleaseLog>(dbPostLog));
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return this.BadRequest(logger, "Failed to save a new release", ex);
+            }
         }
-
-
     }
 }

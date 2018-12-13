@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using AutoMapper;
-using Gcpe.Hub.API.Data;
 using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Gcpe.Hub.API.Controllers
@@ -17,140 +17,141 @@ namespace Gcpe.Hub.API.Controllers
     [Produces("application/json")]
     public class NewsReleasesController : ControllerBase
     {
-        private readonly IRepository _repository;
-        private readonly ILogger<NewsReleasesController> _logger;
-        private readonly IMapper _mapper;
+        private readonly HubDbContext dbContext;
+        private readonly ILogger<NewsReleasesController> logger;
+        private readonly IMapper mapper;
 
-        public NewsReleasesController(IRepository repository,
+        public NewsReleasesController(HubDbContext dbContext,
             ILogger<NewsReleasesController> logger,
             IMapper mapper)
         {
-            _repository = repository;
-            _logger = logger;
-            _mapper = mapper;
+            this.dbContext = dbContext;
+            this.logger = logger;
+            this.mapper = mapper;
         }
 
-        [NonAction]
-        public IEnumerable<NewsRelease> GetResultsPage(NewsReleaseParams newsReleaseParams)
+        private IQueryable<NewsRelease> QueryAll()
         {
-            var newsReleases = _repository.GetAllReleases();
-            var pagedNewsReleases = PagedList<NewsRelease>.Create(newsReleases, newsReleaseParams.PageNumber, newsReleaseParams.PageSize);
-            return pagedNewsReleases;
+            return dbContext.NewsRelease.Include(p => p.Ministry).Include(p => p.NewsReleaseLanguage).Include(p => p.NewsReleaseMinistry)
+                .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentLanguage)
+                .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentContact)
+                .Where(p => p.IsCommitted && p.IsPublished);
+        }
+        [NonAction]
+        public IList<Models.NewsRelease> GetResultsPage(NewsReleaseParams newsReleaseParams)
+        {
+            var posts = QueryAll();
+            var pagedPosts = PagedList<NewsRelease>.Create(posts, newsReleaseParams.PageNumber, newsReleaseParams.PageSize);
+            return pagedPosts.Select(p => p.ToModel(mapper)).ToList();
         }
 
         [HttpGet]
-        [ProducesResponseType(200)]
+        [Produces(typeof(IEnumerable<Models.NewsRelease>))]
         [ProducesResponseType(400)]
         public IActionResult GetAll([FromQuery] NewsReleaseParams newsReleaseParams)
         {
             try
             {
-                var count = _repository.GetAllReleases().Count();
-                var pagedNewsReleases = this.GetResultsPage(newsReleaseParams);
+                var count = QueryAll().Count();
+                var pagedPosts = this.GetResultsPage(newsReleaseParams);
                 Response.AddPagination(newsReleaseParams.PageNumber, newsReleaseParams.PageSize, count, 10);
 
-                return Ok(pagedNewsReleases);
+                return Ok(pagedPosts);
             }
             catch (Exception ex)
             {
-                return this.BadRequest(_logger, "Failed to get releases", ex);
+                return this.BadRequest(logger, "Failed to get all posts", ex);
             }
         }
 
-        [HttpGet("{id}", Name = "GetRelease")]
-        [Produces(typeof(Models.NewsRelease))]
+        [HttpGet("Latest/{numDays}")]
+        [Produces(typeof(IEnumerable<Models.NewsRelease>))]
         [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public IActionResult GetById(string id)
+        public IActionResult GetLatestPosts(int numDays)
         {
             try
             {
-                var dbRelease = _repository.GetReleaseByKey(id);
+                var today = DateTime.Today;
 
-                if (dbRelease != null)
-                {
-                    return Ok(_mapper.Map<Models.NewsRelease>(dbRelease));
-                }
-                else return NotFound();
+                IList<Models.NewsRelease> latest = QueryAll().Where(p => p.PublishDateTime >= today.AddDays(-numDays))
+                    .Select(p => p.ToModel(mapper)).ToList();
+
+                return Ok(latest);
             }
             catch (Exception ex)
             {
-                return this.BadRequest(_logger, "Failed to get release", ex);
+                return this.BadRequest(logger, "Failed to get posts", ex);
+            }
+        }
+
+        [HttpGet("{key}", Name = "GetPost")]
+        [Produces(typeof(Models.NewsRelease))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult GetPost(string key)
+        {
+            try
+            {
+                var dbPost = QueryAll().FirstOrDefault(p => p.Key == key);
+
+                if (dbPost != null)
+                {
+                    var model = dbPost.ToModel(mapper);
+                    return Ok(model);
+                }
+                else return NotFound($"Post not found with key: {key}");
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(logger, "Failed to get post", ex);
             }
         }
 
         [HttpPost]
-        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(Models.NewsRelease), 201)]
         [ProducesResponseType(400)]
-        public IActionResult Post([FromBody]Models.NewsRelease release)
+        public IActionResult AddPost(Models.NewsRelease post)
         {
             try
             {
-                if (release == null)
+                if (post == null)
                 {
                     throw new ValidationException();
                 }
-                var newDbRelease = _mapper.Map<Models.NewsRelease>(release);
-
-                _repository.AddEntity(newDbRelease);
-                // can assume that this always works against an in memory dataset
-                return StatusCode(201);
-
-                // can be un-commented when working with a db
-                // return CreatedAtRoute("GetRelease", new { id = newRelease.Id }, newRelease);
-                //if (_repository.SaveAll())
-                //{
-                //    return CreatedAtRoute("GetRelease", new { id = newRelease.Id }, newRelease);
-                //}
+                NewsRelease dbPost = new NewsRelease { Id = Guid.NewGuid(), IsPublished = true };
+                dbPost.UpdateFromModel(post, dbContext);
+                dbContext.NewsRelease.Add(dbPost);
+                dbContext.SaveChanges();
+                return CreatedAtRoute("GetPost", new { key = dbPost.Key }, dbPost.ToModel(mapper));
             }
             catch (Exception ex)
             {
-                return this.BadRequest(_logger, "Failed to save a new release", ex);
+                return this.BadRequest(logger, "Failed to save a new release", ex);
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{key}")]
         [Produces(typeof(Models.NewsRelease))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public IActionResult Put(string id, [FromBody] Models.NewsRelease release)
+        public IActionResult UpdatePost(string key, [FromBody] Models.NewsRelease post)
         {
             try
             {
-                var dbRelease = _repository.GetReleaseByKey(id);
-                if (dbRelease == null)
+                var dbPost = dbContext.NewsRelease.Include(p => p.NewsReleaseMinistry).FirstOrDefault(p => p.Key == post.Key);
+                if (dbPost == null)
                 {
-                    return NotFound($"Could not find a release with an id of {id}");
+                    return NotFound($"Could not find a post with a key of {key}");
                 }
-                dbRelease = _mapper.Map(release, dbRelease);
-                dbRelease.Timestamp = DateTimeOffset.Now;
-                _repository.Update(id, dbRelease);
-                return Ok(release);
-            }
-            catch (Exception ex)
-            {
-                return this.BadRequest(_logger, "Couldn't update release", ex);
-            }
-        }
 
-        [HttpDelete("{id}")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        public IActionResult Delete(string id)
-        {
-            try
-            {
-                var dbRelease = _repository.GetReleaseByKey(id);
-                if (dbRelease == null)
-                {
-                    return NotFound($"Could not find release with id of {id}");
-                }
-                _repository.Delete(dbRelease);
-                return Ok();
+                dbPost.UpdateFromModel(post, dbContext);
+                dbContext.NewsRelease.Update(dbPost);
+                dbContext.SaveChanges();
+                return Ok(dbPost.ToModel(mapper));
             }
             catch (Exception ex)
             {
-                return this.BadRequest(_logger, "Could not delete release", ex);
+                return this.BadRequest(logger, "Couldn't update post", ex);
             }
         }
 

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Gcpe.Hub.API.Helpers;
-using Gcpe.Hub.API.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading;
+using Gcpe.Hub.Data.Entity;
 
 namespace Gcpe.Hub.API.Controllers
 {
@@ -13,31 +13,30 @@ namespace Gcpe.Hub.API.Controllers
     [Produces("application/json")]
     public class SearchController : ControllerBase
     {
-        private readonly IRepository _repository;
-        private readonly ILogger<SearchController> _logger;
-        private readonly IMapper _mapper;
+        private readonly HubDbContext dbContext;
+        private readonly ILogger<SearchController> logger;
+        private readonly IMapper mapper;
 
-        public SearchController(
-            IRepository repository,
+        public SearchController(HubDbContext dbContext,
             ILogger<SearchController> logger,
             IMapper mapper)
         {
-            _repository = repository;
-            _logger = logger;
-            _mapper = mapper;
+            this.dbContext = dbContext;
+            this.logger = logger;
+            this.mapper = mapper;
         }
 
         [HttpGet]
         public IActionResult Search([FromQuery] SearchParams searchParams)
         {
             Thread.Sleep(1000); // sleep so it takes a second to return the results to the client
-            return Ok(_repository.GetAllArticles(searchParams));
+            return Ok();// _repository.GetAllArticles(searchParams));
         }
 
         [HttpGet("suggestions")]
         public IActionResult Suggestions()
         {
-            var suggestions = _repository.GetAllArticles(null)
+            var suggestions = ActivitiesController.QueryAll(dbContext)
                 .Take(10)
                 .Select(a => a.Title);
 
