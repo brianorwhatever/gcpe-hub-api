@@ -128,6 +128,28 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         }
 
         [Fact]
+        public void Post_ShouldOnlyAllowOnePublishedHighlightedMessage()
+        {
+            var controller = new MessagesController(context, logger.Object, mapper);
+            var testDbMessage = TestData.CreateDbMessage("Test Message Title", "Test description of the test message that will be highlighted", 0, Guid.NewGuid(), true, true);
+            context.Message.Add(testDbMessage);
+            context.SaveChanges();
+            var secondTestDbMessage = TestData.CreateDbMessage("Test Message Title 2", "Test description of the test message that will be highlighted", 0, Guid.Empty, true, true);
+            var newHighlightedMessage = mapper.Map<Models.Message>(secondTestDbMessage);
+
+            var result = controller.AddMessage(newHighlightedMessage) as ObjectResult;
+
+            result.Should().BeOfType<CreatedAtRouteResult>();
+            result.StatusCode.Should().Be(201);
+            var model = result.Value as Models.Message;
+            model.IsPublished.Should().BeTrue();
+            model.IsHighlighted.Should().BeTrue();
+            testDbMessage = context.Message.Find(testDbMessage.Id);
+            testDbMessage.IsHighlighted.Should().BeFalse();
+            testDbMessage.IsPublished.Should().BeTrue();
+        }
+
+        [Fact]
         public void Get_ShouldReturnSuccess()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
@@ -216,6 +238,31 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
 
             result.Should().BeOfType<NotFoundObjectResult>();
             result.StatusCode.Should().Be(404);
+        }
+
+        [Fact]
+        public void Put_ShouldOnlyAllowOnePublishedHighlightedMessage()
+        {
+            var controller = new MessagesController(context, logger.Object, mapper);
+            var testDbMessage = TestData.CreateDbMessage("Test Message Title", "Test description of the test message that will be highlighted", 0, Guid.NewGuid(), true, true);
+            context.Message.Add(testDbMessage);
+            var secondTestDbMessage = TestData.CreateDbMessage("Test Message Title 2", "Test description of the test message that will be highlighted", 0, Guid.NewGuid(), false, false);
+            context.Message.Add(secondTestDbMessage);
+            context.SaveChanges();
+            var testUpdatedMessage = mapper.Map<Models.Message>(secondTestDbMessage);
+            testUpdatedMessage.IsHighlighted = true;
+            testUpdatedMessage.IsPublished = true;
+
+            var result = controller.UpdateMessage(secondTestDbMessage.Id, testUpdatedMessage) as ObjectResult;
+
+            result.Should().BeOfType<OkObjectResult>();
+            result.StatusCode.Should().Be(200);
+            testDbMessage = context.Message.Find(testDbMessage.Id);
+            testDbMessage.IsHighlighted.Should().BeFalse();
+            testDbMessage.IsPublished.Should().BeTrue();
+            secondTestDbMessage = context.Message.Find(secondTestDbMessage.Id);
+            secondTestDbMessage.IsHighlighted.Should().BeTrue();
+            secondTestDbMessage.IsPublished.Should().BeTrue();
         }
     }
 }

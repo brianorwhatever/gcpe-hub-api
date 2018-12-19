@@ -56,6 +56,11 @@ namespace Gcpe.Hub.API.Controllers
                 var dbMessage = mapper.Map<Message>(message);
                 dbMessage.Id = Guid.NewGuid();
                 dbContext.Message.Add(dbMessage);
+                if (dbMessage.IsHighlighted && dbMessage.IsPublished)
+                {
+                    var oldHighlight = dbContext.Message.Where(m => m.IsHighlighted == true && m.IsPublished == true).First();
+                    oldHighlight.IsHighlighted = false;
+                }
                 dbContext.SaveChanges();
                 return CreatedAtRoute("GetMessage", new { id = dbMessage.Id }, mapper.Map<Models.Message>(dbMessage));
             }
@@ -101,6 +106,11 @@ namespace Gcpe.Hub.API.Controllers
                     dbMessage.Timestamp = DateTime.Now;
                     dbMessage.Id = id;
                     dbContext.Message.Update(dbMessage);
+                    if (dbMessage.IsHighlighted && dbMessage.IsPublished)
+                    {
+                        var oldHighlight = dbContext.Message.Where(m => m.IsHighlighted == true && m.IsPublished == true).First();
+                        oldHighlight.IsHighlighted = false;
+                    }
 
                     dbContext.SaveChanges();
                     return Ok(mapper.Map<Models.Message>(dbMessage));
