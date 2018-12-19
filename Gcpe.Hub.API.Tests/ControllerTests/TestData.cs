@@ -93,7 +93,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 SortOrder = sortOrder,
                 IsPublished = isPublished,
                 IsHighlighted = isHighlighted,
-                Timestamp = DateTime.Now
+                Timestamp = DateTime.Now,
+                IsActive = true
             };
         }
 

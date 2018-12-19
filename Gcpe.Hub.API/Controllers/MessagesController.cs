@@ -33,7 +33,7 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var dbMessages = dbContext.Message.Where(m => m.IsPublished == IsPublished).OrderBy(p => p.SortOrder).ToList();
+                var dbMessages = dbContext.Message.Where(m => m.IsPublished == IsPublished && m.IsActive == true).OrderBy(p => p.SortOrder).ToList();
                 return Ok(mapper.Map<List<Models.Message>>(dbMessages));
             }
             catch (Exception ex)
@@ -54,6 +54,7 @@ namespace Gcpe.Hub.API.Controllers
                     throw new ValidationException("Invalid parameter (id)");
                 }
                 var dbMessage = mapper.Map<Message>(message);
+                dbMessage.IsActive = true;
 
                 if (dbMessage.IsPublished)
                 {
@@ -68,8 +69,11 @@ namespace Gcpe.Hub.API.Controllers
                 dbContext.Message.Add(dbMessage);
                 if (dbMessage.IsHighlighted && dbMessage.IsPublished)
                 {
-                    var oldHighlight = dbContext.Message.Where(m => m.IsHighlighted == true && m.IsPublished == true).First();
-                    oldHighlight.IsHighlighted = false;
+                    var oldHighlights = dbContext.Message.Where(m => m.IsHighlighted == true && m.IsPublished == true);
+                    foreach (Message oldHighlight in oldHighlights)
+                    {
+                        oldHighlight.IsHighlighted = false;
+                    }
                 }
                 dbContext.SaveChanges();
                 return CreatedAtRoute("GetMessage", new { id = dbMessage.Id }, mapper.Map<Models.Message>(dbMessage));
@@ -89,7 +93,7 @@ namespace Gcpe.Hub.API.Controllers
             try
             {
                 var dbMessage = dbContext.Message.Find(id);
-                if (dbMessage != null)
+                if (dbMessage != null && dbMessage.IsActive)
                 {
                     return Ok(mapper.Map<Models.Message>(dbMessage));
                 }
@@ -110,7 +114,7 @@ namespace Gcpe.Hub.API.Controllers
             try
             {
                 var dbMessage = dbContext.Message.Find(id);
-                if (dbMessage != null)
+                if (dbMessage != null && dbMessage.IsActive)
                 {
                     if (!dbMessage.IsPublished && message.IsPublished)
                     {
@@ -127,8 +131,11 @@ namespace Gcpe.Hub.API.Controllers
                     dbContext.Message.Update(dbMessage);
                     if (dbMessage.IsHighlighted && dbMessage.IsPublished)
                     {
-                        var oldHighlight = dbContext.Message.Where(m => m.IsHighlighted == true && m.IsPublished == true).First();
-                        oldHighlight.IsHighlighted = false;
+                        var oldHighlights = dbContext.Message.Where(m => m.IsHighlighted == true && m.IsPublished == true && m.Id != dbMessage.Id);
+                        foreach (Message oldHighlight in oldHighlights)
+                        {
+                            oldHighlight.IsHighlighted = false;
+                        }
                     }
 
                     dbContext.SaveChanges();
@@ -139,6 +146,31 @@ namespace Gcpe.Hub.API.Controllers
             catch (Exception ex)
             {
                 return this.BadRequest(logger, "Failed to update message", ex);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult DeleteMessage(Guid id)
+        {
+            try
+            {
+                var dbMessage = dbContext.Message.Find(id);
+                if (dbMessage != null && dbMessage.IsActive)
+                {
+                    dbMessage.IsActive = false;
+                    dbMessage.Timestamp = DateTime.Now;
+                    dbContext.Message.Update(dbMessage);
+                    dbContext.SaveChanges();
+                    return new NoContentResult();
+                }
+                return NotFound($"Message not found with id: {id}");
+            }
+            catch (Exception ex)
+            {
+                return this.BadRequest(logger, "Failed to delete message", ex);
             }
         }
     }
