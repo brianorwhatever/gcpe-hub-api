@@ -54,6 +54,16 @@ namespace Gcpe.Hub.API.Controllers
                     throw new ValidationException("Invalid parameter (id)");
                 }
                 var dbMessage = mapper.Map<Message>(message);
+
+                if (dbMessage.IsPublished)
+                {
+                    dbMessage.SortOrder = 0;
+                    var messages = dbContext.Message.Where(m => m.IsPublished);
+                    foreach (Message bumpedMessage in messages)
+                    {
+                        bumpedMessage.SortOrder = bumpedMessage.SortOrder + 1;
+                    }
+                }
                 dbMessage.Id = Guid.NewGuid();
                 dbContext.Message.Add(dbMessage);
                 if (dbMessage.IsHighlighted && dbMessage.IsPublished)
@@ -102,6 +112,15 @@ namespace Gcpe.Hub.API.Controllers
                 var dbMessage = dbContext.Message.Find(id);
                 if (dbMessage != null)
                 {
+                    if (!dbMessage.IsPublished && message.IsPublished)
+                    {
+                        message.SortOrder = 0;
+                        var messages = dbContext.Message.Where(m => m.IsPublished);
+                        foreach (Message bumpedMessage in messages)
+                        {
+                            bumpedMessage.SortOrder = bumpedMessage.SortOrder + 1;
+                        }
+                    }
                     dbMessage = mapper.Map(message, dbMessage);
                     dbMessage.Timestamp = DateTime.Now;
                     dbMessage.Id = id;

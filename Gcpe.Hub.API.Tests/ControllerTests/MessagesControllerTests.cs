@@ -116,6 +116,28 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         }
 
         [Fact]
+        public void Post_ShouldSortNewlyPublishedAtTop()
+        {
+            var controller = new MessagesController(context, logger.Object, mapper);
+            var testDbMessage = TestData.CreateDbMessage("Top message", "test description", 100, Guid.Empty, true, false);
+            for (var i = 0; i < 5; i++)
+            {
+                context.Message.Add(TestData.CreateDbMessage(i.ToString(), "test description", i, Guid.NewGuid(), true, false));
+            }
+            context.SaveChanges();
+
+            var testMessage = mapper.Map<Models.Message>(testDbMessage);
+            var result = controller.AddMessage(testMessage) as ObjectResult;
+
+            result.Should().BeOfType<CreatedAtRouteResult>();
+            result.StatusCode.Should().Be(201);
+            var messages = context.Message.Where(m => m.IsPublished).OrderBy(m => m.SortOrder).ToList();
+            messages[0].Title.Should().Be("Top message");
+            messages[1].Title.Should().Be("0");
+            messages[5].Title.Should().Be("4");
+        }
+
+        [Fact]
         public void Post_ShouldReturnBadRequest()
         {
             var controller = new MessagesController(context, logger.Object, mapper);
@@ -263,6 +285,30 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             secondTestDbMessage = context.Message.Find(secondTestDbMessage.Id);
             secondTestDbMessage.IsHighlighted.Should().BeTrue();
             secondTestDbMessage.IsPublished.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Put_ShouldSortNewlyPublishedAtTop()
+        {
+            var controller = new MessagesController(context, logger.Object, mapper);
+            var testDbMessage = TestData.CreateDbMessage("Top message", "test description", 100, Guid.NewGuid(), false, false);
+            for (var i = 0; i < 5; i++)
+            {
+                context.Message.Add(TestData.CreateDbMessage(i.ToString(), "test description", i, Guid.NewGuid(), true, false));
+            }
+            context.Message.Add(testDbMessage);
+            context.SaveChanges();
+
+            var testMessage = mapper.Map<Models.Message>(testDbMessage);
+            testMessage.IsPublished = true;
+
+            var result = controller.UpdateMessage(testMessage.Id, testMessage) as ObjectResult;
+            result.Should().BeOfType<OkObjectResult>();
+            result.StatusCode.Should().Be(200);
+            var messages = context.Message.Where(m => m.IsPublished).OrderBy(m => m.SortOrder).ToList();
+            messages[0].Title.Should().Be("Top message");
+            messages[1].Title.Should().Be("0");
+            messages[5].Title.Should().Be("4");
         }
     }
 }
