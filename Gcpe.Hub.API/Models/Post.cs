@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Gcpe.Hub.API.Models
 {
-    public class NewsRelease
+    public class Post
     {
         public class Document
         {

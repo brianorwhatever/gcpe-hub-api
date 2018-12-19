@@ -31,23 +31,23 @@ namespace Gcpe.Hub.API.Helpers
             return controller.BadRequest(error);
         }
 
-        public static Models.NewsRelease ToModel(this NewsRelease dbPost, IMapper mapper)
+        public static Models.Post ToModel(this NewsRelease dbPost, IMapper mapper)
         {
-            var model = mapper.Map<Models.NewsRelease>(dbPost);
+            var model = mapper.Map<Models.Post>(dbPost);
 
             var englishPost = dbPost.NewsReleaseLanguage.First(rl => rl.LanguageId == Language.enCA);
             model.Summary = englishPost.Summary;
             model.Location = englishPost.Location;
-            var documents = new List<Models.NewsRelease.Document>();
+            var documents = new List<Models.Post.Document>();
             foreach (var document in dbPost.NewsReleaseDocument.OrderBy(e => e.SortIndex))
             {
                 foreach (var documentLanguage in document.NewsReleaseDocumentLanguage)
                 {
-                    var documentModel = mapper.Map<Models.NewsRelease.Document>(documentLanguage);
-                    var contacts = new List<Models.NewsRelease.Document.DocumentContact>();
+                    var documentModel = mapper.Map<Models.Post.Document>(documentLanguage);
+                    var contacts = new List<Models.Post.Document.DocumentContact>();
                     foreach (var contact in documentLanguage.NewsReleaseDocumentContact)
                     {
-                        var postDocumentContact = new Models.NewsRelease.Document.DocumentContact();
+                        var postDocumentContact = new Models.Post.Document.DocumentContact();
                         string[] lines = contact.Information.Replace("\r\n", "\n").Split('\n');
                         postDocumentContact.Title = lines[0];
                         postDocumentContact.Details = contact.Information.Substring(lines[0].Length).TrimStart();
@@ -66,7 +66,7 @@ namespace Gcpe.Hub.API.Helpers
             return model;
         }
 
-        internal static void UpdateFromModel(this NewsRelease dbPost, Models.NewsRelease post, HubDbContext dbContext)
+        internal static void UpdateFromModel(this NewsRelease dbPost, Models.Post post, HubDbContext dbContext)
         {
             dbContext.Entry(dbPost).CurrentValues.SetValues(post);
             dbPost.ReleaseType = Enum.Parse<ReleaseType>(post.Kind);

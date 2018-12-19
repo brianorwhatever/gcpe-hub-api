@@ -16,7 +16,7 @@ namespace Gcpe.Hub.API.IntegrationTests
 
         public static StringContent CreatePost(string key)
         {
-            return SerializeObject(new Models.NewsRelease
+            return SerializeObject(new Models.Post
             {
                 Key = key,
                 Kind = "Story",

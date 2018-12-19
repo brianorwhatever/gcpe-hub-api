@@ -13,15 +13,15 @@ using Xunit;
 
 namespace Gcpe.Hub.API.Tests.ControllerTests
 {
-    public class NewsReleasesControllerTests
+    public class PostsControllerTests
     {
-        private Mock<ILogger<NewsReleasesController>> logger;
+        private Mock<ILogger<PostsController>> logger;
         private HubDbContext context;
         private IMapper mapper;
-        private NewsReleasesController controller;
+        private PostsController controller;
         private DbContextOptions<HubDbContext> options;
 
-        public NewsReleasesControllerTests()
+        public PostsControllerTests()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
@@ -30,13 +30,13 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                       .UseInMemoryDatabase(Guid.NewGuid().ToString())
                       .Options;
             context = new HubDbContext(options);
-            logger = new Mock<ILogger<NewsReleasesController>>();
+            logger = new Mock<ILogger<PostsController>>();
             var mockMapper = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new MappingProfile());
             });
             mapper = mockMapper.CreateMapper();
-            controller = new NewsReleasesController(context, logger.Object, mapper);
+            controller = new PostsController(context, logger.Object, mapper);
         }
 
         [Fact]
@@ -59,7 +59,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType(typeof(OkObjectResult), "because the read operation should go smoothly");
 
-            var actualValue = ((result as OkObjectResult).Value as Models.NewsRelease);
+            var actualValue = ((result as OkObjectResult).Value as Models.Post);
             actualValue.Key.Should().Be(_expectedModelReturn.Key);
             actualValue.PublishDateTime.Should().Be(_expectedModelReturn.PublishDateTime);
             actualValue.Summary.Should().Be(_expectedModelReturn.NewsReleaseLanguage.First().Summary);
@@ -92,7 +92,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var validId = "0";
             var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
-            var controller = new NewsReleasesController(mockContext.Object, logger.Object, mapper);
+            var controller = new PostsController(mockContext.Object, logger.Object, mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
@@ -107,7 +107,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         }
 
         [Fact]
-        public void GetAllNewsReleases_ShouldReturnSuccess()
+        public void GetAllPosts_ShouldReturnSuccess()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
@@ -133,14 +133,14 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         }
 
         [Fact]
-        public void GetAllNewsReleases_ShouldReturnBadRequest_WhenDataSourceIsUnavailable()
+        public void GetAllPosts_ShouldReturnBadRequest_WhenDataSourceIsUnavailable()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
             var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
-            var controller = new NewsReleasesController(mockContext.Object, logger.Object, mapper);
+            var controller = new PostsController(mockContext.Object, logger.Object, mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
@@ -160,7 +160,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var releaseToCreate = new Models.NewsRelease
+            var releaseToCreate = new Models.Post
             {
                 Summary = "toto",
                 Kind = "Release",
@@ -176,8 +176,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Assert
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType<CreatedAtRouteResult>("because the create operation should go smoothly");
-            result.StatusCode.Should().Be(201, "because HTTP Status 201 should be returned upon creation of new entity");
-            var model = result.Value as Models.NewsRelease;
+            result.StatusCode.Should().Be(201, "because HTTP Status 201 should be returned upon creation of new post");
+            var model = result.Value as Models.Post;
             model.Summary.Should().Be(releaseToCreate.Summary);
             model.Kind.Should().Be(releaseToCreate.Kind);
 
@@ -215,7 +215,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var dbPost = TestData.CreateDbPost();
             context.NewsRelease.Add(dbPost);
             context.SaveChanges();
-            Models.NewsRelease expectedModelReturn = dbPost.ToModel(mapper);
+            Models.Post expectedModelReturn = dbPost.ToModel(mapper);
             expectedModelReturn.Kind = "Release";
             expectedModelReturn.Summary = "toto";
 
@@ -229,7 +229,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Assert
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType(typeof(OkObjectResult), "because the update operation should go smoothly");
-            var model = result.Value as Models.NewsRelease;
+            var model = result.Value as Models.Post;
             model.Summary.Should().Be(expectedModelReturn.Summary);
             model.Kind.Should().Be(expectedModelReturn.Kind);
         }
@@ -240,7 +240,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            Models.NewsRelease testPost = TestData.CreateDbPost("0").ToModel(mapper);
+            Models.Post testPost = TestData.CreateDbPost("0").ToModel(mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
@@ -261,8 +261,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
-            var controller = new NewsReleasesController(mockContext.Object, logger.Object, mapper);
-            Models.NewsRelease testPost = TestData.CreateDbPost().ToModel(mapper);
+            var controller = new PostsController(mockContext.Object, logger.Object, mapper);
+            Models.Post testPost = TestData.CreateDbPost().ToModel(mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act

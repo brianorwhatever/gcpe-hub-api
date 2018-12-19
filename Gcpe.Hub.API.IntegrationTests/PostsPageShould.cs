@@ -7,16 +7,16 @@ using Xunit;
 
 namespace Gcpe.Hub.API.IntegrationTests
 {
-    public class NewsReleasesPageShould : BaseWebApiTest
+    public class PostsPageShould : BaseWebApiTest
     {
         private int expectedEntitiesPerPage = 5;
 
-        public NewsReleasesPageShould(CustomWebApplicationFactory<Startup> factory) : base(factory)
+        public PostsPageShould(CustomWebApplicationFactory<Startup> factory) : base(factory)
         {
         }
 
         [Fact]
-        public async Task ReturnAListOfNewsReleases()
+        public async Task ReturnAListOfPosts()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
@@ -24,17 +24,17 @@ namespace Gcpe.Hub.API.IntegrationTests
 
             for (var i = 0; i < 5; i++)
             {
-                var createResponse = await Client.PostAsync("/api/NewsReleases", TestData.CreatePost(i.ToString()));
+                var createResponse = await Client.PostAsync("/api/Posts", TestData.CreatePost(i.ToString()));
                 createResponse.EnsureSuccessStatusCode();
             }
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var response = await Client.GetAsync("/api/NewsReleases");
+            var response = await Client.GetAsync("/api/Posts");
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var deserializedBody = JsonConvert.DeserializeObject<Models.NewsRelease[]>(body);
+            var deserializedBody = JsonConvert.DeserializeObject<Models.Post[]>(body);
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -49,9 +49,9 @@ namespace Gcpe.Hub.API.IntegrationTests
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
 
-            var createResponse = await Client.PostAsync("/api/NewsReleases", TestData.CreatePost("0"));
+            var createResponse = await Client.PostAsync("/api/Posts", TestData.CreatePost("0"));
             createResponse.EnsureSuccessStatusCode();
-            createResponse.Headers.Location.LocalPath.Should().Be("/api/NewsReleases/0");
+            createResponse.Headers.Location.LocalPath.Should().Be("/api/Posts/0");
 
 
             //-----------------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ namespace Gcpe.Hub.API.IntegrationTests
             var response = await Client.GetAsync(createResponse.Headers.Location);
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadAsStringAsync();
-            var deserializedBody = JsonConvert.DeserializeObject<Models.NewsRelease>(body);
+            var deserializedBody = JsonConvert.DeserializeObject<Models.Post>(body);
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -74,7 +74,7 @@ namespace Gcpe.Hub.API.IntegrationTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var response = await Client.GetAsync("/api/NewsReleases/1");
+            var response = await Client.GetAsync("/api/Posts/1");
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert

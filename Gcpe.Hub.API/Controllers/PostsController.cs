@@ -15,14 +15,14 @@ namespace Gcpe.Hub.API.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     [Produces("application/json")]
-    public class NewsReleasesController : ControllerBase
+    public class PostsController : ControllerBase
     {
         private readonly HubDbContext dbContext;
-        private readonly ILogger<NewsReleasesController> logger;
+        private readonly ILogger<PostsController> logger;
         private readonly IMapper mapper;
 
-        public NewsReleasesController(HubDbContext dbContext,
-            ILogger<NewsReleasesController> logger,
+        public PostsController(HubDbContext dbContext,
+            ILogger<PostsController> logger,
             IMapper mapper)
         {
             this.dbContext = dbContext;
@@ -38,7 +38,7 @@ namespace Gcpe.Hub.API.Controllers
                 .Where(p => p.IsCommitted && p.IsPublished);
         }
         [NonAction]
-        public IList<Models.NewsRelease> GetResultsPage(NewsReleaseParams newsReleaseParams)
+        public IList<Models.Post> GetResultsPage(NewsReleaseParams newsReleaseParams)
         {
             var posts = QueryAll();
             var pagedPosts = PagedList<NewsRelease>.Create(posts, newsReleaseParams.PageNumber, newsReleaseParams.PageSize);
@@ -46,7 +46,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpGet]
-        [Produces(typeof(IEnumerable<Models.NewsRelease>))]
+        [Produces(typeof(IEnumerable<Models.Post>))]
         [ProducesResponseType(400)]
         public IActionResult GetAll([FromQuery] NewsReleaseParams newsReleaseParams)
         {
@@ -65,7 +65,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpGet("Latest/{numDays}")]
-        [Produces(typeof(IEnumerable<Models.NewsRelease>))]
+        [Produces(typeof(IEnumerable<Models.Post>))]
         [ProducesResponseType(400)]
         public IActionResult GetLatestPosts(int numDays)
         {
@@ -73,19 +73,19 @@ namespace Gcpe.Hub.API.Controllers
             {
                 var today = DateTime.Today;
 
-                IList<Models.NewsRelease> latest = QueryAll().Where(p => p.PublishDateTime >= today.AddDays(-numDays))
+                IList<Models.Post> latest = QueryAll().Where(p => p.PublishDateTime >= today.AddDays(-numDays))
                     .Select(p => p.ToModel(mapper)).ToList();
 
                 return Ok(latest);
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to get posts", ex);
+                return this.BadRequest(logger, "Failed to get latest posts", ex);
             }
         }
 
         [HttpGet("{key}", Name = "GetPost")]
-        [Produces(typeof(Models.NewsRelease))]
+        [Produces(typeof(Models.Post))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
         public IActionResult GetPost(string key)
@@ -108,9 +108,9 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(Models.NewsRelease), 201)]
+        [ProducesResponseType(typeof(Models.Post), 201)]
         [ProducesResponseType(400)]
-        public IActionResult AddPost(Models.NewsRelease post)
+        public IActionResult AddPost(Models.Post post)
         {
             try
             {
@@ -118,7 +118,7 @@ namespace Gcpe.Hub.API.Controllers
                 {
                     throw new ValidationException();
                 }
-                NewsRelease dbPost = new NewsRelease { Id = Guid.NewGuid(), IsPublished = true };
+                var dbPost = new NewsRelease { Id = Guid.NewGuid(), IsPublished = true };
                 dbPost.UpdateFromModel(post, dbContext);
                 dbContext.NewsRelease.Add(dbPost);
                 dbContext.SaveChanges();
@@ -126,15 +126,15 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to save a new release", ex);
+                return this.BadRequest(logger, "Failed to save a new post", ex);
             }
         }
 
         [HttpPut("{key}")]
-        [Produces(typeof(Models.NewsRelease))]
+        [Produces(typeof(Models.Post))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public IActionResult UpdatePost(string key, [FromBody] Models.NewsRelease post)
+        public IActionResult UpdatePost(string key, [FromBody] Models.Post post)
         {
             try
             {

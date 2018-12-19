@@ -44,7 +44,7 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var today = DateTime.Today;
+                var today = DateTime.Today.AddDays(-numDays/2); // temporary for testing with a stale db
                 IList<Models.Activity> forecast = QueryAll(dbContext)
                     .Where(a => a.StartDateTime >= today && a.StartDateTime <= today.AddDays(numDays) && !a.IsConfidential && a.IsConfirmed && a.IsActive &&
 //                               a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-")) &&

@@ -14,15 +14,15 @@ using Xunit;
 
 namespace Gcpe.Hub.API.Tests.ControllerTests
 {
-    public class NewsReleaseLogsControllerTests
+    public class PostLogsControllerTests
     {
-        private Mock<ILogger<NewsReleaseLogsController>> logger;
+        private Mock<ILogger<PostLogsController>> logger;
         private HubDbContext context;
         private IMapper mapper;
-        private NewsReleaseLogsController controller;
+        private PostLogsController controller;
         private DbContextOptions<HubDbContext> options;
 
-        public NewsReleaseLogsControllerTests()
+        public PostLogsControllerTests()
         {
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
@@ -31,13 +31,13 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                       .UseInMemoryDatabase(Guid.NewGuid().ToString())
                       .Options;
             context = new HubDbContext(options);
-            logger = new Mock<ILogger<NewsReleaseLogsController>>();
+            logger = new Mock<ILogger<PostLogsController>>();
             var mockMapper = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile(new MappingProfile());
             });
             mapper = mockMapper.CreateMapper();
-            controller = new NewsReleaseLogsController(context, logger.Object, mapper);
+            controller = new PostLogsController(context, logger.Object, mapper);
         }
 
         [Fact]
@@ -51,7 +51,6 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             post.NewsReleaseLog = TestData.CreateDbPostLogs(post);
             var expectedLogEntry = post.NewsReleaseLog.FirstOrDefault();
             var expectedCount = post.NewsReleaseLog.Count;
-            context.NewsReleaseLog.AddRange(post.NewsReleaseLog);
             context.SaveChanges();
 
             //-----------------------------------------------------------------------------------------------------------
@@ -63,11 +62,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Assert
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType(typeof(OkObjectResult), "because the read operation should go smoothly");
-            var actual = result.Value as IEnumerable<Models.NewsReleaseLog>;
+            var actual = result.Value as IEnumerable<Models.PostLog>;
             var actualLogEntry = actual.FirstOrDefault();
 
             actual.Count().Should().Be(expectedCount);
-            actualLogEntry.ReleaseKey.Should().Be(expectedLogEntry.Release.Key);
+            actualLogEntry.PostKey.Should().Be(expectedLogEntry.Release.Key);
             actualLogEntry.Description.Should().Be(expectedLogEntry.Description);
         }
 
@@ -95,10 +94,15 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var releaseLogToCreate = new Models.NewsReleaseLog
+            NewsRelease post = TestData.CreateDbPost();
+            context.NewsRelease.Add(post);
+            context.SaveChanges();
+
+            var releaseLogToCreate = new Models.PostLog
             {
                 Description = "toto",
-                DateTime = DateTime.Now
+                DateTime = DateTime.Now,
+                PostKey = post.Key
             };
 
             //-----------------------------------------------------------------------------------------------------------
@@ -110,8 +114,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Assert
             //-----------------------------------------------------------------------------------------------------------
             result.Should().BeOfType<CreatedAtRouteResult>("because the create operation should go smoothly");
-            result.StatusCode.Should().Be(201, "because HTTP Status 201 should be returned upon creation of new entity");
-            var model = result.Value as Models.NewsReleaseLog;
+            result.StatusCode.Should().Be(201, "because HTTP Status 201 should be returned upon creation of new entry");
+            var model = result.Value as Models.PostLog;
             model.Description.Should().Be("toto");
 
         }

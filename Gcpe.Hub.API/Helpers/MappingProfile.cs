@@ -16,14 +16,15 @@ namespace Gcpe.Hub.API.Helpers
                 .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)));
             // use db.Entry(post).CurrentValues.SetValues() instead of ReverseMap
 
-            CreateMap<NewsReleaseDocumentLanguage, Models.NewsRelease.Document>();
+            CreateMap<NewsReleaseDocumentLanguage, Models.Post.Document>();
 
-            CreateMap<NewsRelease, Models.NewsRelease>()
+            CreateMap<NewsRelease, Models.Post>()
                 .ForMember(dest => dest.Kind, opt => opt.MapFrom(src => src.ReleaseType));
             //.ForMember(dest => dest.NewsReleaseLanguage, opt => opt.MapFrom(src => src.Summary))
             //.ForMember(dest => dest.NewsReleaseMinistry, opt => opt.MapFrom(src => src.MinistriesSharedWith));
 
-            CreateMap<NewsReleaseLog, Models.NewsReleaseLog>(); // use db.Entry(post).CurrentValues.SetValues() instead of ReverseMap
+            CreateMap<NewsReleaseLog, Models.PostLog>() // use db.Entry(post).CurrentValues.SetValues() instead of ReverseMap
+                .ForMember(dest => dest.PostKey, opt => opt.MapFrom(src => src.Release.Key));
 
             CreateMap<Message, Models.Message>()
                 .ReverseMap();
