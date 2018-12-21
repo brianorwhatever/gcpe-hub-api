@@ -76,7 +76,6 @@ namespace Gcpe.Hub.API.Helpers
             {
                 newsReleaseLanguage = new NewsReleaseLanguage() { LanguageId = Language.enCA };
                 dbPost.NewsReleaseLanguage.Add(newsReleaseLanguage);
-                //dbContext.NewsReleaseLanguage.Add(newsReleaseLanguage);
             }
             newsReleaseLanguage.Location = post.Location;
             newsReleaseLanguage.Summary = post.Summary;

@@ -29,6 +29,7 @@ namespace Gcpe.Hub.API.Controllers
 
         [HttpGet("{postKey}")]
         [Produces(typeof(IEnumerable<Models.PostLog>))]
+        [ResponseCache(Duration = 300)] // change to 10 when using swagger
         public IActionResult GetPostLogs(string postKey)
         {
             var dbPost = dbContext.NewsRelease.Include(p => p.NewsReleaseLog).FirstOrDefault(p => p.Key == postKey);

@@ -29,6 +29,7 @@ namespace Gcpe.Hub.API.Controllers
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.Message>))]
         [ProducesResponseType(400)]
+        [ResponseCache(Duration = 30)] // change to 10 when using swagger
         public IActionResult GetAllMessages([FromQuery(Name = "IsPublished")] bool IsPublished = true)
         {
             try

@@ -5,6 +5,7 @@ using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -20,17 +21,20 @@ namespace Gcpe.Hub.API.Controllers
         private readonly HubDbContext dbContext;
         private readonly ILogger<PostsController> logger;
         private readonly IMapper mapper;
+        private readonly bool isProduction;
 
         public PostsController(HubDbContext dbContext,
             ILogger<PostsController> logger,
-            IMapper mapper)
+            IMapper mapper,
+            IHostingEnvironment env)
         {
             this.dbContext = dbContext;
             this.logger = logger;
             this.mapper = mapper;
+            this.isProduction = env?.IsProduction() != false;
         }
 
-        private IQueryable<NewsRelease> QueryAll()
+        private IQueryable<NewsRelease> QueryPosts()
         {
             return dbContext.NewsRelease.Include(p => p.Ministry).Include(p => p.NewsReleaseLanguage).Include(p => p.NewsReleaseMinistry)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentLanguage)
@@ -40,7 +44,7 @@ namespace Gcpe.Hub.API.Controllers
         [NonAction]
         public IList<Models.Post> GetResultsPage(NewsReleaseParams newsReleaseParams)
         {
-            var posts = QueryAll();
+            var posts = QueryPosts();
             var pagedPosts = PagedList<NewsRelease>.Create(posts, newsReleaseParams.PageNumber, newsReleaseParams.PageSize);
             return pagedPosts.Select(p => p.ToModel(mapper)).ToList();
         }
@@ -48,13 +52,14 @@ namespace Gcpe.Hub.API.Controllers
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.Post>))]
         [ProducesResponseType(400)]
-        public IActionResult GetAll([FromQuery] NewsReleaseParams newsReleaseParams)
+        [ResponseCache(Duration = 300)] // change to 10 when using swagger
+        public IActionResult GetAllPosts([FromQuery] NewsReleaseParams postParams)
         {
             try
             {
-                var count = QueryAll().Count();
-                var pagedPosts = this.GetResultsPage(newsReleaseParams);
-                Response.AddPagination(newsReleaseParams.PageNumber, newsReleaseParams.PageSize, count, 10);
+                var count = QueryPosts().Count();
+                var pagedPosts = this.GetResultsPage(postParams);
+                Response.AddPagination(postParams.PageNumber, postParams.PageSize, count, 10);
 
                 return Ok(pagedPosts);
             }
@@ -67,16 +72,15 @@ namespace Gcpe.Hub.API.Controllers
         [HttpGet("Latest/{numDays}")]
         [Produces(typeof(IEnumerable<Models.Post>))]
         [ProducesResponseType(400)]
+        [ResponseCache(Duration = 300)] // change to 10 when using swagger
         public IActionResult GetLatestPosts(int numDays)
         {
             try
             {
-                var today = DateTime.Today;
+                IQueryable<NewsRelease> latest = QueryPosts().OrderByDescending(p => p.PublishDateTime);
+                latest = isProduction ? latest.Where(p => p.PublishDateTime >= DateTime.Today.AddDays(-numDays)) : latest.Take(20); // for testing with a stale db
 
-                IList<Models.Post> latest = QueryAll().Where(p => p.PublishDateTime >= today.AddDays(-numDays))
-                    .Select(p => p.ToModel(mapper)).ToList();
-
-                return Ok(latest);
+                return Ok(latest.Select(p => p.ToModel(mapper)).ToList());
             }
             catch (Exception ex)
             {
@@ -92,7 +96,7 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var dbPost = QueryAll().FirstOrDefault(p => p.Key == key);
+                var dbPost = QueryPosts().FirstOrDefault(p => p.Key == key);
 
                 if (dbPost != null)
                 {
@@ -138,7 +142,7 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var dbPost = dbContext.NewsRelease.Include(p => p.NewsReleaseMinistry).FirstOrDefault(p => p.Key == post.Key);
+                var dbPost = QueryPosts().FirstOrDefault(p => p.Key == post.Key);
                 if (dbPost == null)
                 {
                     return NotFound($"Could not find a post with a key of {key}");

@@ -18,7 +18,6 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         private Mock<ILogger<PostsController>> logger;
         private HubDbContext context;
         private IMapper mapper;
-        private PostsController controller;
         private DbContextOptions<HubDbContext> options;
 
         public PostsControllerTests()
@@ -36,7 +35,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 cfg.AddProfile(new MappingProfile());
             });
             mapper = mockMapper.CreateMapper();
-            controller = new PostsController(context, logger.Object, mapper);
+        }
+
+        private PostsController Controller(HubDbContext c = null)
+        {
+            return new PostsController(c ?? context, logger.Object, mapper, null);
         }
 
         [Fact]
@@ -52,7 +55,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.GetPost(_expectedModelReturn.Key);
+            var result = Controller().GetPost(_expectedModelReturn.Key);
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -75,7 +78,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.GetPost("-1");  // does not exist...
+            var result = Controller().GetPost("-1");  // does not exist...
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -92,12 +95,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             var validId = "0";
             var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
-            var controller = new PostsController(mockContext.Object, logger.Object, mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.GetPost(validId) as BadRequestObjectResult;
+            var result = Controller(mockContext.Object).GetPost(validId) as BadRequestObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -123,7 +125,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var results = controller.GetResultsPage(paginationParams);
+            var results = Controller().GetResultsPage(paginationParams);
             var actualNumberOfReleases = results.Count();
 
             //-----------------------------------------------------------------------------------------------------------
@@ -140,12 +142,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             var mockContext = new Mock<HubDbContext>(options);
             mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
-            var controller = new PostsController(mockContext.Object, logger.Object, mapper);
 
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.GetAll(newsReleaseParams: new NewsReleaseParams()) as BadRequestObjectResult;
+            var result = Controller(mockContext.Object).GetAllPosts(postParams: new NewsReleaseParams()) as BadRequestObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -170,7 +171,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.AddPost(releaseToCreate) as ObjectResult;
+            var result = Controller().AddPost(releaseToCreate) as ObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -192,6 +193,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
+            PostsController controller = Controller();
             controller.ModelState.AddModelError("error", "some validation error");
 
             //-----------------------------------------------------------------------------------------------------------
@@ -223,7 +225,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             // Act
             //-----------------------------------------------------------------------------------------------------------
 
-            var result = controller.UpdatePost(dbPost.Key, expectedModelReturn) as ObjectResult;
+            var result = Controller().UpdatePost(dbPost.Key, expectedModelReturn) as ObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -245,7 +247,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.UpdatePost("-1", testPost); // -1 does not exist...
+            var result = Controller().UpdatePost("-1", testPost); // -1 does not exist...
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
@@ -259,15 +261,14 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Arrange
             //-----------------------------------------------------------------------------------------------------------
-            var mockContext = new Mock<HubDbContext>(options);
-            mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
-            var controller = new PostsController(mockContext.Object, logger.Object, mapper);
             Models.Post testPost = TestData.CreateDbPost().ToModel(mapper);
 
+            var mockContext = new Mock<HubDbContext>(options);
+            mockContext.Setup(m => m.NewsRelease).Throws(new InvalidOperationException());
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var result = controller.UpdatePost(testPost.Key, testPost) as ObjectResult;
+            var result = Controller(mockContext.Object).UpdatePost(testPost.Key, testPost) as ObjectResult;
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert
