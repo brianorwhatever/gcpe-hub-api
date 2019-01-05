@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using AutoMapper;
-using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,7 @@ namespace Gcpe.Hub.API.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     [Produces("application/json")]
-    public class MessagesController : ControllerBase
+    public class MessagesController : BaseController
     {
         private readonly HubDbContext dbContext;
         private readonly ILogger<MessagesController> logger;
@@ -26,20 +25,24 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
         }
 
+        const int checkInterval = 5;
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.Message>))]
+        [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = 30)] // change to 10 when using swagger
+        [ResponseCache(Duration = checkInterval)]
         public IActionResult GetAllMessages([FromQuery(Name = "IsPublished")] bool IsPublished = true)
         {
             try
             {
-                var dbMessages = dbContext.Message.Where(m => m.IsPublished == IsPublished && m.IsActive == true).OrderBy(p => p.SortOrder).ToList();
-                return Ok(mapper.Map<List<Models.Message>>(dbMessages));
+                IQueryable<Message> dbMessages = dbContext.Message.Where(m => m.IsPublished == IsPublished && m.IsActive);
+
+                IActionResult res = HandleModifiedSince(checkInterval, () => dbMessages.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
+                return res ?? Ok(mapper.Map<List<Models.Message>>(dbMessages.OrderBy(p => p.SortOrder).ToList()));
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to retrieve messages", ex);
+                return BadRequest(logger, "Failed to retrieve messages", ex);
             }
         }
 
@@ -81,7 +84,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to create message", ex);
+                return BadRequest(logger, "Failed to create message", ex);
             }
         }
 

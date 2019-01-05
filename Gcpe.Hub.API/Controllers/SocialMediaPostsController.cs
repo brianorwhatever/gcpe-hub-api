@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using AutoMapper;
-using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,7 @@ namespace Gcpe.Hub.API.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     [Produces("application/json")]
-    public class SocialMediaPostsController : ControllerBase
+    public class SocialMediaPostsController : BaseController
     {
         private readonly HubDbContext dbContext;
         private readonly ILogger<SocialMediaPostsController> logger;
@@ -26,16 +25,20 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
         }
 
+        const int checkInterval = 5;
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.SocialMediaPost>))]
+        [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = 30)] // change to 10 when using swagger
+        [ResponseCache(Duration = checkInterval)]
         public IActionResult GetAllSocialMediaPosts()
         {
             try
             {
-                var dbPosts = dbContext.SocialMediaPost.Where(p => p.IsActive).OrderBy(p => p.SortOrder).ToList();
-                return Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts));
+                IQueryable<SocialMediaPost> dbPosts = dbContext.SocialMediaPost.Where(p => p.IsActive);
+
+                IActionResult res = HandleModifiedSince(checkInterval, () => dbPosts.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
+                return res ?? Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts.OrderBy(p => p.SortOrder).ToList()));
             }
             catch (Exception ex)
             {
@@ -129,7 +132,7 @@ namespace Gcpe.Hub.API.Controllers
                     dbPost.Timestamp = DateTime.Now;
                     dbContext.SocialMediaPost.Update(dbPost);
                     dbContext.SaveChanges();
-                    return new NoContentResult();
+                    return NoContent();
                 }
                 return NotFound($"Social media post not found with id: {id}");
             }

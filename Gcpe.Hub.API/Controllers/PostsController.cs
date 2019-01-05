@@ -16,7 +16,7 @@ namespace Gcpe.Hub.API.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     [Produces("application/json")]
-    public class PostsController : ControllerBase
+    public class PostsController : BaseController
     {
         private readonly HubDbContext dbContext;
         private readonly ILogger<PostsController> logger;
@@ -65,26 +65,29 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to get all posts", ex);
+                return BadRequest(logger, "Failed to get all posts", ex);
             }
         }
 
+        const int checkInterval = 60;
         [HttpGet("Latest/{numDays}")]
         [Produces(typeof(IEnumerable<Models.Post>))]
+        [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = 300)] // change to 10 when using swagger
+        [ResponseCache(Duration = checkInterval)]
         public IActionResult GetLatestPosts(int numDays)
         {
             try
             {
-                IQueryable<NewsRelease> latest = QueryPosts().OrderByDescending(p => p.PublishDateTime);
-                latest = isProduction ? latest.Where(p => p.PublishDateTime >= DateTime.Today.AddDays(-numDays)) : latest.Take(20); // for testing with a stale db
+                IQueryable<NewsRelease> latest = isProduction ? QueryPosts().Where(p => p.PublishDateTime >= DateTime.Today.AddDays(-numDays))
+                                                              : QueryPosts().OrderByDescending(p => p.PublishDateTime).Take(20); // 20 for testing with a stale db
 
-                return Ok(latest.Select(p => p.ToModel(mapper)).ToList());
+                IActionResult res = HandleModifiedSince(checkInterval, () => latest.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp.LocalDateTime);
+                return res ?? Ok(latest.OrderByDescending(p => p.PublishDateTime).Select(p => p.ToModel(mapper)).ToList());
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to get latest posts", ex);
+                return BadRequest(logger, "Failed to get latest posts", ex);
             }
         }
 
@@ -107,7 +110,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to get post", ex);
+                return BadRequest(logger, "Failed to get post", ex);
             }
         }
 
@@ -130,7 +133,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to save a new post", ex);
+                return BadRequest(logger, "Failed to save a new post", ex);
             }
         }
 
@@ -155,7 +158,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Couldn't update post", ex);
+                return BadRequest(logger, "Couldn't update post", ex);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Text;
 using Bogus;
 using Newtonsoft.Json;
@@ -32,7 +33,8 @@ namespace Gcpe.Hub.API.IntegrationTests
         {
             return SerializeObject(new Models.SocialMediaPost {
                 SortOrder = sortOrder,
-                Url = url
+                Url = url,
+                Timestamp = DateTime.Now
             });
         }
 
@@ -44,7 +46,8 @@ namespace Gcpe.Hub.API.IntegrationTests
                 Description = description,
                 SortOrder = sortOrder,
                 IsPublished = isPublished,
-                IsHighlighted = isHighlighted
+                IsHighlighted = isHighlighted,
+                Timestamp = DateTime.Now
             });
         }
     }

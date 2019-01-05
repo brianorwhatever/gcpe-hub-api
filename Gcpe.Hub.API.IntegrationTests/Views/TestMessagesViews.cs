@@ -11,18 +11,15 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
 {
     public class TestMessagesViews : BaseWebApiTest
     {
-        public StringContent testMessage = TestData.CreateMessage("Lorem Title", "Lorem description", 0, true, false);
+        public TestMessagesViews(CustomWebApplicationFactory<Startup> factory) : base(factory) {}
 
-        public TestMessagesViews(CustomWebApplicationFactory<Startup> factory) : base(factory)
+        private async Task<Models.Message> _PostMessage(string title = "Lorem Title", int sortOrder = 0)
         {
-        }
-
-        private async Task<Guid> _PostMessage()
-        {
+            var testMessage = TestData.CreateMessage(title, "Lorem description", sortOrder, true, false);
             var createResponse = await Client.PostAsync("/api/messages", testMessage);
+            createResponse.EnsureSuccessStatusCode();
             var createBody = await createResponse.Content.ReadAsStringAsync();
-            var createdPost = JsonConvert.DeserializeObject<Models.Message>(createBody);
-            return createdPost.Id;
+            return JsonConvert.DeserializeObject<Models.Message>(createBody);
         }
 
         [Fact]
@@ -30,11 +27,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         {
             for (var i = 0; i < 5; i++)
             {
-                int sortOrder = 5 - i;
-                var newMessage = TestData.CreateMessage("Sorted Test Message", "test description", sortOrder, true, false);
-
-                var createResponse = await Client.PostAsync("/api/messages", newMessage);
-                createResponse.EnsureSuccessStatusCode();
+                await _PostMessage("Sorted Test Message", 5 - i);
             }
 
             var response = await Client.GetAsync("/api/messages");
@@ -49,16 +42,26 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         }
 
         [Fact]
+        public async Task List_EndpointReturnSuccessAndHandleIfModifiedSince()
+        {
+            await _PostMessage();
+
+            var response = await Client.GetAsync("/api/messages");
+            response.EnsureSuccessStatusCode();
+
+            DateTimeOffset? lastModified = response.Content.Headers.LastModified;
+            Client.DefaultRequestHeaders.IfModifiedSince = lastModified;
+            response = await Client.GetAsync("/api/messages");
+            response.StatusCode.Should().Be(304);
+        }
+
+        [Fact]
         public async Task Create_EndpointReturnSuccessAndCorrectMessage()
         {
-            var newMessage = TestData.CreateMessage("Test title!", "test description!", 0, true, false);
-            var createResponse = await Client.PostAsync("/api/messages", newMessage);
-            createResponse.EnsureSuccessStatusCode();
-            var createBody = await createResponse.Content.ReadAsStringAsync();
-            var messageResult = JsonConvert.DeserializeObject<Models.Message>(createBody);
+            var createdMessage = await _PostMessage("Test title!");
 
-            messageResult.Title.Should().Be("Test title!");
-            messageResult.Description.Should().Be("test description!");
+            createdMessage.Title.Should().Be("Test title!");
+            createdMessage.Description.Should().Be("Lorem description");
         }
 
         [Fact]
@@ -86,7 +89,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Get_EndpointReturnSuccessAndCorrectMessage()
         {
-            Guid id = await _PostMessage();
+            Guid id = (await _PostMessage()).Id;
 
             var response = await Client.GetAsync($"/api/Messages/{id}");
             response.EnsureSuccessStatusCode();
@@ -107,7 +110,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Put_EndpointReturnSuccessAndCorrectMessage()
         {
-            Guid id = await _PostMessage();
+            Guid id = (await _PostMessage()).Id;
             var newTestMessage = TestData.CreateMessage("new title", "new description", 10, true, false);
 
             var response = await Client.PutAsync($"/api/messages/{id}", newTestMessage);
@@ -124,7 +127,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Put_EndpointReturnSuccessWithDefaultsAndCorrectMessage()
         {
-            Guid id = await _PostMessage();
+            Guid id = (await _PostMessage()).Id;
             var content = new StringContent(JsonConvert.SerializeObject(new { Title = "new title" }), Encoding.UTF8, "application/json");
 
             var response = await Client.PutAsync($"/api/messages/{id}", content);
@@ -143,7 +146,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         [Fact]
         public async Task Put_EndpointShouldRequireTitle()
         {
-            Guid id = await _PostMessage();
+            Guid id = (await _PostMessage()).Id;
             
             var content = new StringContent(JsonConvert.SerializeObject(new { }), Encoding.UTF8, "application/json");
             var response = await Client.PutAsync($"/api/messages/{id}", content);

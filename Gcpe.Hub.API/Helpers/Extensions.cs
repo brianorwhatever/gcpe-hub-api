@@ -4,9 +4,7 @@ using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -25,12 +23,6 @@ namespace Gcpe.Hub.API.Helpers
             response.Headers.Add("Access-Control-Expose-Headers", "Pagination");
 
         }
-        public static IActionResult BadRequest(this ControllerBase controller, ILogger logger, string error, Exception ex)
-        {
-            logger.LogError(error + ": " + ex.ToString());
-            return controller.BadRequest(error);
-        }
-
         public static Models.Post ToModel(this NewsRelease dbPost, IMapper mapper)
         {
             var model = mapper.Map<Models.Post>(dbPost);

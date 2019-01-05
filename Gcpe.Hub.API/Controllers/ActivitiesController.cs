@@ -15,7 +15,7 @@ namespace Gcpe.Hub.API.Controllers
     [Route("api/[Controller]")]
     [ApiController]
     [Produces("application/json")]
-    public class ActivitiesController : ControllerBase
+    public class ActivitiesController : BaseController
     {
         private readonly HubDbContext dbContext;
         private readonly ILogger<ActivitiesController> logger;
@@ -42,6 +42,7 @@ namespace Gcpe.Hub.API.Controllers
                 .Include(a => a.ActivityCategories).ThenInclude(ac => ac.Category)
                 .Include(a => a.ActivitySharedWith).ThenInclude(sw => sw.Ministry);
         }
+
         private IQueryable<Activity> Forecast(HubDbContext dbContext)
         {
             return QueryAll(dbContext)
@@ -49,10 +50,12 @@ namespace Gcpe.Hub.API.Controllers
                             a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")));
         }
 
+        const int checkInterval = 60;
         [HttpGet("Forecast/{numDays}")]
         [Produces(typeof(IEnumerable<Models.Activity>))]
+        [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = 300)] // change to 10 when using swagger
+        [ResponseCache(Duration = checkInterval)]
         public IActionResult GetActivityForecast(int numDays)
         {
             try
@@ -63,13 +66,14 @@ namespace Gcpe.Hub.API.Controllers
                 {
                     today = mostFutureForecastActivity.Value.AddDays(today.DayOfWeek - mostFutureForecastActivity.Value.DayOfWeek - 26 * 7); // 26 weeks before the most future activity for testing with a stale db
                 }
-                forecast = forecast.Where(a => a.StartDateTime >= today && a.StartDateTime <= today.AddDays(numDays)).OrderBy(a => a.StartDateTime);
+                forecast = forecast.Where(a => a.StartDateTime >= today && a.StartDateTime <= today.AddDays(numDays));
 
-                return Ok(forecast.Select(a => mapper.Map<Models.Activity>(a)).ToList());
+                IActionResult res = HandleModifiedSince(checkInterval, () => forecast.OrderByDescending(a => a.LastUpdatedDateTime).FirstOrDefault()?.LastUpdatedDateTime);
+                return res ?? Ok(forecast.OrderBy(a => a.StartDateTime).Select(a => mapper.Map<Models.Activity>(a)).ToList());
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to get activities", ex);
+                return BadRequest(logger, "Failed to get activities", ex);
             }
         }
 
@@ -91,7 +95,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to get an activity", ex);
+                return BadRequest(logger, "Failed to get an activity", ex);
             }
         }
 
@@ -110,7 +114,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to save an activity", ex);
+                return BadRequest(logger, "Failed to save an activity", ex);
             }
         }
 
@@ -134,7 +138,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Couldn't update activity", ex);
+                return BadRequest(logger, "Couldn't update activity", ex);
             }
         }
     }
