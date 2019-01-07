@@ -18,17 +18,17 @@ namespace Gcpe.Hub.API.Controllers
     public class ActivitiesController : BaseController
     {
         private readonly HubDbContext dbContext;
-        private readonly ILogger<ActivitiesController> logger;
         private readonly IMapper mapper;
         private static DateTime? mostFutureForecastActivity = null;
+        static DateTime? lastModified = null;
+        static DateTime lastModifiedNextCheck = DateTime.Now;
 
         public ActivitiesController(HubDbContext dbContext,
             ILogger<ActivitiesController> logger,
             IMapper mapper,
-            IHostingEnvironment env)
+            IHostingEnvironment env) : base(logger)
         {
             this.dbContext = dbContext;
-            this.logger = logger;
             this.mapper = mapper;
             if (env?.IsProduction() == false && !mostFutureForecastActivity.HasValue)
             {
@@ -50,12 +50,11 @@ namespace Gcpe.Hub.API.Controllers
                             a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")));
         }
 
-        const int checkInterval = 60;
         [HttpGet("Forecast/{numDays}")]
         [Produces(typeof(IEnumerable<Models.Activity>))]
         [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = checkInterval)]
+        [ResponseCache(Duration = 60)]
         public IActionResult GetActivityForecast(int numDays)
         {
             try
@@ -68,12 +67,12 @@ namespace Gcpe.Hub.API.Controllers
                 }
                 forecast = forecast.Where(a => a.StartDateTime >= today && a.StartDateTime <= today.AddDays(numDays));
 
-                IActionResult res = HandleModifiedSince(checkInterval, () => forecast.OrderByDescending(a => a.LastUpdatedDateTime).FirstOrDefault()?.LastUpdatedDateTime);
+                IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => forecast.OrderByDescending(a => a.LastUpdatedDateTime).FirstOrDefault()?.LastUpdatedDateTime);
                 return res ?? Ok(forecast.OrderBy(a => a.StartDateTime).Select(a => mapper.Map<Models.Activity>(a)).ToList());
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to get activities", ex);
+                return BadRequest("Failed to get activities", ex);
             }
         }
 
@@ -95,7 +94,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to get an activity", ex);
+                return BadRequest("Failed to get an activity", ex);
             }
         }
 
@@ -114,7 +113,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to save an activity", ex);
+                return BadRequest("Failed to save an activity", ex);
             }
         }
 
@@ -138,7 +137,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Couldn't update activity", ex);
+                return BadRequest("Couldn't update activity", ex);
             }
         }
     }

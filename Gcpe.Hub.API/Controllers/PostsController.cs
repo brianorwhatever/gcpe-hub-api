@@ -19,17 +19,17 @@ namespace Gcpe.Hub.API.Controllers
     public class PostsController : BaseController
     {
         private readonly HubDbContext dbContext;
-        private readonly ILogger<PostsController> logger;
         private readonly IMapper mapper;
         private readonly bool isProduction;
+        static DateTime? lastModified = null;
+        static DateTime lastModifiedNextCheck = DateTime.Now;
 
         public PostsController(HubDbContext dbContext,
             ILogger<PostsController> logger,
             IMapper mapper,
-            IHostingEnvironment env)
+            IHostingEnvironment env) : base(logger)
         {
             this.dbContext = dbContext;
-            this.logger = logger;
             this.mapper = mapper;
             this.isProduction = env?.IsProduction() != false;
         }
@@ -65,16 +65,15 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to get all posts", ex);
+                return BadRequest("Failed to get all posts", ex);
             }
         }
 
-        const int checkInterval = 60;
         [HttpGet("Latest/{numDays}")]
         [Produces(typeof(IEnumerable<Models.Post>))]
         [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = checkInterval)]
+        [ResponseCache(Duration = 60)]
         public IActionResult GetLatestPosts(int numDays)
         {
             try
@@ -82,12 +81,12 @@ namespace Gcpe.Hub.API.Controllers
                 IQueryable<NewsRelease> latest = isProduction ? QueryPosts().Where(p => p.PublishDateTime >= DateTime.Today.AddDays(-numDays))
                                                               : QueryPosts().OrderByDescending(p => p.PublishDateTime).Take(20); // 20 for testing with a stale db
 
-                IActionResult res = HandleModifiedSince(checkInterval, () => latest.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp.LocalDateTime);
+                IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => latest.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp.LocalDateTime);
                 return res ?? Ok(latest.OrderByDescending(p => p.PublishDateTime).Select(p => p.ToModel(mapper)).ToList());
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to get latest posts", ex);
+                return BadRequest("Failed to get latest posts", ex);
             }
         }
 
@@ -110,7 +109,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to get post", ex);
+                return BadRequest("Failed to get post", ex);
             }
         }
 
@@ -133,7 +132,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to save a new post", ex);
+                return BadRequest("Failed to save a new post", ex);
             }
         }
 
@@ -158,7 +157,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Couldn't update post", ex);
+                return BadRequest("Couldn't update post", ex);
             }
         }
 

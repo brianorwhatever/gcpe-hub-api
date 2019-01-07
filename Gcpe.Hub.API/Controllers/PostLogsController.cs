@@ -14,15 +14,13 @@ namespace Gcpe.Hub.API.Controllers
     public class PostLogsController : BaseController
     {
         private readonly HubDbContext dbContext;
-        private readonly ILogger<PostLogsController> logger;
         private readonly IMapper mapper;
 
         public PostLogsController(HubDbContext dbContext,
           ILogger<PostLogsController> logger,
-          IMapper mapper)
+          IMapper mapper) : base(logger)
         {
             this.dbContext = dbContext;
-            this.logger = logger;
             this.mapper = mapper;
         }
 
@@ -54,7 +52,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(logger, "Failed to save a new post log entry", ex);
+                return BadRequest("Failed to save a new post log entry", ex);
             }
         }
     }

@@ -1,17 +1,26 @@
 ﻿using System;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Gcpe.Hub.API.Controllers
 {
     /// <summary>
-    /// The base class for all controllers
+    /// The base class for all API controllers
     /// </summary>
     public abstract class BaseController : ControllerBase
     {
-        static DateTime? lastModified = null;
-        static DateTime lastModifiedNextCheck = DateTime.Now;
+        protected readonly ILogger logger;
+
+        /// <summary>
+        /// Construct the BaseController, it requires an ILogger object
+        /// </summary>
+        /// <param name="logger"></param>
+        protected BaseController(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         /// <summary>
         /// HandleModifiedSince, caching support
@@ -19,15 +28,16 @@ namespace Gcpe.Hub.API.Controllers
         /// <param name="model"></param>
         /// <param name="timestamp"></param>
         /// <returns></returns>
-        protected IActionResult HandleModifiedSince(int checkInterval, Func<DateTime?> lastModifiedUpdateFn)
+        protected IActionResult HandleModifiedSince(ref DateTime? lastModified, ref DateTime lastModifiedNextCheck, Func<DateTime?> lastModifiedCheckFn)
         {
             var now = DateTime.Now;
-            if (lastModifiedNextCheck <= now)
+            ResponseHeaders responseHeaders = Response?.GetTypedHeaders();
+            if (lastModifiedNextCheck <= now && responseHeaders?.CacheControl.MaxAge.HasValue == true)
             {
-                lastModified = lastModifiedUpdateFn();
-                lastModifiedNextCheck = now.AddSeconds(checkInterval);
+                lastModified = lastModifiedCheckFn();
+                lastModifiedNextCheck = now.Add(responseHeaders.CacheControl.MaxAge.Value);
             }
-            if (lastModified.HasValue && Request != null)
+            if (lastModified.HasValue)
             {
                 var modifiedSpan = lastModified - Request.GetTypedHeaders().IfModifiedSince;
 
@@ -36,12 +46,12 @@ namespace Gcpe.Hub.API.Controllers
                 {
                     return StatusCode(StatusCodes.Status304NotModified);
                 }
-                Response.GetTypedHeaders().LastModified = lastModified;
+                responseHeaders.LastModified = lastModified;
             }
             return null;
         }
 
-        protected IActionResult BadRequest(ILogger logger, string error, Exception ex)
+        protected IActionResult BadRequest(string error, Exception ex)
         {
             logger.LogError(error + ": " + ex.ToString());
             return BadRequest(error);

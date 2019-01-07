@@ -15,34 +15,33 @@ namespace Gcpe.Hub.API.Controllers
     public class SocialMediaPostsController : BaseController
     {
         private readonly HubDbContext dbContext;
-        private readonly ILogger<SocialMediaPostsController> logger;
         private readonly IMapper mapper;
+        static DateTime? lastModified = null;
+        static DateTime lastModifiedNextCheck = DateTime.Now;
 
-        public SocialMediaPostsController(HubDbContext dbContext, ILogger<SocialMediaPostsController> logger, IMapper mapper)
+        public SocialMediaPostsController(HubDbContext dbContext, ILogger<SocialMediaPostsController> logger, IMapper mapper) : base(logger)
         {
             this.dbContext = dbContext;
-            this.logger = logger;
             this.mapper = mapper;
         }
 
-        const int checkInterval = 5;
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.SocialMediaPost>))]
         [ProducesResponseType(304)]
         [ProducesResponseType(400)]
-        [ResponseCache(Duration = checkInterval)]
+        [ResponseCache(Duration = 5)]
         public IActionResult GetAllSocialMediaPosts()
         {
             try
             {
                 IQueryable<SocialMediaPost> dbPosts = dbContext.SocialMediaPost.Where(p => p.IsActive);
 
-                IActionResult res = HandleModifiedSince(checkInterval, () => dbPosts.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
+                IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => dbPosts.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
                 return res ?? Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts.OrderBy(p => p.SortOrder).ToList()));
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to retrieve social media posts", ex);
+                return BadRequest("Failed to retrieve social media posts", ex);
             }
         }
 
@@ -66,7 +65,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to create social media post", ex);
+                return BadRequest("Failed to create social media post", ex);
             }
         }
 
@@ -87,7 +86,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to retrieve social media post", ex);
+                return BadRequest("Failed to retrieve social media post", ex);
             }
         }
 
@@ -113,7 +112,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to update social media post", ex);
+                return BadRequest("Failed to update social media post", ex);
             }
         }
 
@@ -138,7 +137,7 @@ namespace Gcpe.Hub.API.Controllers
             }
             catch (Exception ex)
             {
-                return this.BadRequest(logger, "Failed to delete social media post", ex);
+                return BadRequest("Failed to delete social media post", ex);
             }
         }
     }
