@@ -34,10 +34,10 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                IQueryable<SocialMediaPost> dbPosts = dbContext.SocialMediaPost.Where(p => p.IsActive);
+                IQueryable<SocialMediaPost> dbPosts = dbContext.SocialMediaPost;
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => dbPosts.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
-                return res ?? Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts.OrderBy(p => p.SortOrder).ToList()));
+                return res ?? Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts.Where(p => p.IsActive).OrderBy(p => p.SortOrder).ToList()));
             }
             catch (Exception ex)
             {

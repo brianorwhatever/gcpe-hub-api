@@ -39,12 +39,13 @@ namespace Gcpe.Hub.API.Controllers
             return dbContext.NewsRelease.Include(p => p.Ministry).Include(p => p.NewsReleaseLanguage).Include(p => p.NewsReleaseMinistry)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentLanguage)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentContact)
-                .Where(p => p.IsCommitted && p.IsPublished);
+                .Where(p => p.IsCommitted);
         }
         [NonAction]
-        public IList<Models.Post> GetResultsPage(NewsReleaseParams newsReleaseParams)
+        public IList<Models.Post> GetResultsPage(NewsReleaseParams newsReleaseParams, out int count)
         {
-            var posts = QueryPosts();
+            var posts = QueryPosts().Where(p => p.IsPublished);
+            count = posts.Count(); 
             var pagedPosts = PagedList<NewsRelease>.Create(posts, newsReleaseParams.PageNumber, newsReleaseParams.PageSize);
             return pagedPosts.Select(p => p.ToModel(mapper)).ToList();
         }
@@ -57,8 +58,8 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                var count = QueryPosts().Count();
-                var pagedPosts = this.GetResultsPage(postParams);
+                int count;
+                var pagedPosts = GetResultsPage(postParams, out count);
                 Response.AddPagination(postParams.PageNumber, postParams.PageSize, count, 10);
 
                 return Ok(pagedPosts);
@@ -82,7 +83,7 @@ namespace Gcpe.Hub.API.Controllers
                                                               : QueryPosts().OrderByDescending(p => p.PublishDateTime).Take(20); // 20 for testing with a stale db
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => latest.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp.LocalDateTime);
-                return res ?? Ok(latest.OrderByDescending(p => p.PublishDateTime).Select(p => p.ToModel(mapper)).ToList());
+                return res ?? Ok(latest.Where(p => p.IsPublished).OrderByDescending(p => p.PublishDateTime).Select(p => p.ToModel(mapper)).ToList());
             }
             catch (Exception ex)
             {

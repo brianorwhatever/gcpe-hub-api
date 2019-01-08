@@ -32,7 +32,7 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
             if (env?.IsProduction() == false && !mostFutureForecastActivity.HasValue)
             {
-                mostFutureForecastActivity = Forecast(dbContext).OrderByDescending(a => a.StartDateTime).First().StartDateTime;
+                mostFutureForecastActivity = Forecast(dbContext).Where(a => a.IsActive).OrderByDescending(a => a.StartDateTime).First().StartDateTime;
             }
         }
 
@@ -46,7 +46,7 @@ namespace Gcpe.Hub.API.Controllers
         private IQueryable<Activity> Forecast(HubDbContext dbContext)
         {
             return QueryAll(dbContext)
-                .Where(a => a.IsConfirmed && a.IsActive && !a.IsConfidential && //a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-")) &&
+                .Where(a => a.IsConfirmed && !a.IsConfidential && //a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-")) &&
                             a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")));
         }
 
@@ -68,7 +68,7 @@ namespace Gcpe.Hub.API.Controllers
                 forecast = forecast.Where(a => a.StartDateTime >= today && a.StartDateTime <= today.AddDays(numDays));
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => forecast.OrderByDescending(a => a.LastUpdatedDateTime).FirstOrDefault()?.LastUpdatedDateTime);
-                return res ?? Ok(forecast.OrderBy(a => a.StartDateTime).Select(a => mapper.Map<Models.Activity>(a)).ToList());
+                return res ?? Ok(forecast.Where(a => a.IsActive).OrderBy(a => a.StartDateTime).Select(a => mapper.Map<Models.Activity>(a)).ToList());
             }
             catch (Exception ex)
             {

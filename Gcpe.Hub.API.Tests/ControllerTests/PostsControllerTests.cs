@@ -125,8 +125,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             //-----------------------------------------------------------------------------------------------------------
             // Act
             //-----------------------------------------------------------------------------------------------------------
-            var results = Controller().GetResultsPage(paginationParams);
-            var actualNumberOfReleases = results.Count();
+            int actualNumberOfReleases;
+            var results = Controller().GetResultsPage(paginationParams, out actualNumberOfReleases);
 
             //-----------------------------------------------------------------------------------------------------------
             // Assert

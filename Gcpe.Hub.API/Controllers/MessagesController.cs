@@ -34,10 +34,10 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                IQueryable<Message> dbMessages = dbContext.Message.Where(m => m.IsPublished == IsPublished && m.IsActive);
+                IQueryable<Message> dbMessages = dbContext.Message;
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => dbMessages.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
-                return res ?? Ok(mapper.Map<List<Models.Message>>(dbMessages.OrderBy(p => p.SortOrder).ToList()));
+                return res ?? Ok(mapper.Map<List<Models.Message>>(dbMessages.Where(m => m.IsPublished == IsPublished && m.IsActive).OrderBy(p => p.SortOrder).ToList()));
             }
             catch (Exception ex)
             {
