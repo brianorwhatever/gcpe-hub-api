@@ -69,6 +69,7 @@ namespace Gcpe.Hub.API.Controllers
                     }
                 }
                 dbMessage.Id = Guid.NewGuid();
+                dbMessage.Timestamp = DateTime.Now;
                 dbContext.Message.Add(dbMessage);
                 if (dbMessage.IsHighlighted && dbMessage.IsPublished)
                 {

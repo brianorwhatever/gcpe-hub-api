@@ -42,7 +42,7 @@ namespace Gcpe.Hub.API.Controllers
                 var modifiedSpan = lastModified - Request.GetTypedHeaders().IfModifiedSince;
 
                 // Ignore milliseconds because browsers are not supposed to store them (HTTP-date: https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
-                if (modifiedSpan.HasValue && modifiedSpan.Value.TotalMilliseconds < 1000)
+                if (modifiedSpan.HasValue && Math.Abs(modifiedSpan.Value.TotalMilliseconds) < 1000)
                 {
                     return StatusCode(StatusCodes.Status304NotModified);
                 }
