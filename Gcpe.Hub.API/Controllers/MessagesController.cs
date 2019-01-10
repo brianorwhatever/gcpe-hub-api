@@ -26,11 +26,10 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         // Bumps the sort order of all published messages from firstSortOrder to lastSortOrder
-        // A negative lastSortOrder omits it from the query
-        public static int BumpSortOrders(HubDbContext dbContext, int direction, int firstSortOrder, int lastSortOrder)
+        public int BumpSortOrders(int direction, int firstSortOrder, int? lastSortOrder)
         {
             IQueryable<Message> messages = dbContext.Message.Where(m => m.IsPublished && m.IsActive && m.SortOrder >= firstSortOrder);
-            if (lastSortOrder >= 0)
+            if (lastSortOrder != null)
             {
                 messages = messages.Where(m => m.SortOrder <= lastSortOrder);
             }
@@ -80,7 +79,7 @@ namespace Gcpe.Hub.API.Controllers
                 if (dbMessage.IsPublished)
                 {
                     dbMessage.SortOrder = 0;
-                    BumpSortOrders(dbContext, 1, 0, -1);
+                    BumpSortOrders(1, 0, null);
                 }
                 dbMessage.Id = Guid.NewGuid();
                 dbMessage.Timestamp = DateTime.Now;
@@ -137,19 +136,19 @@ namespace Gcpe.Hub.API.Controllers
                     if (!dbMessage.IsPublished && message.IsPublished)
                     {
                         message.SortOrder = 0;
-                        BumpSortOrders(dbContext, 1, 0, -1);
+                        BumpSortOrders(1, 0, null);
                     }
                     else
                     {
                         // going up!
                         if (dbMessage.SortOrder > message.SortOrder)
                         {
-                            BumpSortOrders(dbContext, 1, message.SortOrder, dbMessage.SortOrder);
+                            BumpSortOrders(1, message.SortOrder, dbMessage.SortOrder);
                         }
                         // going down¡
                         else if (dbMessage.SortOrder < message.SortOrder)
                         {
-                            BumpSortOrders(dbContext, -1, dbMessage.SortOrder, message.SortOrder);
+                            BumpSortOrders(-1, dbMessage.SortOrder, message.SortOrder);
                         }
 
                     }
