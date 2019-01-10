@@ -26,7 +26,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         // Bumps the sort order of all published messages from firstSortOrder to lastSortOrder
-        public int BumpSortOrders(int direction, int firstSortOrder, int? lastSortOrder)
+        private int BumpSortOrders(int direction, int firstSortOrder, int? lastSortOrder)
         {
             IQueryable<Message> messages = dbContext.Message.Where(m => m.IsPublished && m.IsActive && m.SortOrder >= firstSortOrder);
             if (lastSortOrder != null)
