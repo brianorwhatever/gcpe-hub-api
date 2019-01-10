@@ -25,6 +25,36 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
         }
 
+        // Bumps the sort order of all published messages from firstSortOrder to lastSortOrder
+        // A negative lastSortOrder omits it from the query
+        public static int BumpSortOrders(HubDbContext dbContext, Boolean positiveDirection, int firstSortOrder, int lastSortOrder)
+        {
+            IQueryable<Message> messages;
+            if (lastSortOrder >= 0)
+            {
+                messages = dbContext.Message.Where(m => m.IsPublished && m.IsActive && m.SortOrder >= firstSortOrder && m.SortOrder <= lastSortOrder);
+            }
+            else
+            {
+                messages = dbContext.Message.Where(m => m.IsPublished && m.IsActive && m.SortOrder >= firstSortOrder);
+            }
+            var count = messages.Count();
+
+            foreach (Message bumpedMessage in messages)
+            {
+                if (positiveDirection)
+                {
+                    bumpedMessage.SortOrder = bumpedMessage.SortOrder + 1;
+                }
+                else
+                {
+                    bumpedMessage.SortOrder = bumpedMessage.SortOrder - 1;
+                }
+            }
+            return messages.Count();
+
+        }
+
         [HttpGet]
         [Produces(typeof(IEnumerable<Models.Message>))]
         [ProducesResponseType(304)]
@@ -62,11 +92,7 @@ namespace Gcpe.Hub.API.Controllers
                 if (dbMessage.IsPublished)
                 {
                     dbMessage.SortOrder = 0;
-                    var messages = dbContext.Message.Where(m => m.IsPublished);
-                    foreach (Message bumpedMessage in messages)
-                    {
-                        bumpedMessage.SortOrder = bumpedMessage.SortOrder + 1;
-                    }
+                    BumpSortOrders(dbContext, true, 0, -1);
                 }
                 dbMessage.Id = Guid.NewGuid();
                 dbMessage.Timestamp = DateTime.Now;
@@ -123,11 +149,21 @@ namespace Gcpe.Hub.API.Controllers
                     if (!dbMessage.IsPublished && message.IsPublished)
                     {
                         message.SortOrder = 0;
-                        var messages = dbContext.Message.Where(m => m.IsPublished);
-                        foreach (Message bumpedMessage in messages)
+                        BumpSortOrders(dbContext, true, 0, -1);
+                    }
+                    else
+                    {
+                        // going up!
+                        if (dbMessage.SortOrder > message.SortOrder)
                         {
-                            bumpedMessage.SortOrder = bumpedMessage.SortOrder + 1;
+                            BumpSortOrders(dbContext, true, message.SortOrder, dbMessage.SortOrder);
                         }
+                        // going down¡
+                        else if (dbMessage.SortOrder < message.SortOrder)
+                        {
+                            BumpSortOrders(dbContext, false, dbMessage.SortOrder, message.SortOrder);
+                        }
+
                     }
                     dbMessage = mapper.Map(message, dbMessage);
                     dbMessage.Timestamp = DateTime.Now;
