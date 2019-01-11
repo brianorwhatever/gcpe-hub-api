@@ -56,9 +56,10 @@ namespace Gcpe.Hub.API.Controllers
                 {
                     throw new ValidationException("Invalid parameter (id)");
                 }
-                var dbPost = mapper.Map<SocialMediaPost>(socialMediaPost);
-                dbPost.Id = Guid.NewGuid();
-                dbPost.IsActive = true;
+                var dbPost = new SocialMediaPost { IsActive = true };
+                socialMediaPost.Id = Guid.NewGuid();
+                socialMediaPost.Timestamp = DateTime.Now;
+                dbContext.Entry(dbPost).CurrentValues.SetValues(socialMediaPost);
                 dbContext.SocialMediaPost.Add(dbPost);
                 dbContext.SaveChanges();
                 return CreatedAtRoute("GetSocialMediaPost", new { id = dbPost.Id }, mapper.Map<Models.SocialMediaPost>(dbPost));
@@ -101,9 +102,9 @@ namespace Gcpe.Hub.API.Controllers
                 var dbPost = dbContext.SocialMediaPost.Find(id);
                 if (dbPost != null && dbPost.IsActive)
                 {
-                    dbPost = mapper.Map(socialMediaPost, dbPost);
-                    dbPost.Timestamp = DateTime.Now;
-                    dbPost.Id = id;
+                    socialMediaPost.Id = id;
+                    socialMediaPost.Timestamp = DateTime.Now;
+                    dbContext.Entry(dbPost).CurrentValues.SetValues(socialMediaPost);
                     dbContext.SocialMediaPost.Update(dbPost);
                     dbContext.SaveChanges();
                     return Ok(mapper.Map<Models.SocialMediaPost>(dbPost));

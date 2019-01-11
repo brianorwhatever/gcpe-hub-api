@@ -111,7 +111,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
         public async Task Put_EndpointReturnSuccessAndCorrectMessage()
         {
             Guid id = (await _PostMessage()).Id;
-            var newTestMessage = TestData.CreateMessage("new title", "new description", 10, true, false);
+            var newTestMessage = TestData.CreateMessage("new title", "new description", 1, true, false);
 
             var response = await Client.PutAsync($"/api/messages/{id}", newTestMessage);
             response.EnsureSuccessStatusCode();
@@ -120,7 +120,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
 
             messageResult.Title.Should().Be("new title");
             messageResult.Description.Should().Be("new description");
-            messageResult.SortOrder.Should().Be(10);
+            messageResult.SortOrder.Should().Be(1);
             messageResult.Id.Should().Be(id);
         }
 
