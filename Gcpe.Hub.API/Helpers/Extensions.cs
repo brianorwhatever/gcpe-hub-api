@@ -90,7 +90,7 @@ namespace Gcpe.Hub.API.Helpers
         {
             dbContext.Entry(dbActivity).CurrentValues.SetValues(activity);
 
-            dbActivity.ContactMinistry = dbContext.Ministry.FirstOrDefault(m => m.Key == activity.ContactMinistryKey);
+            dbActivity.ContactMinistry = dbContext.Ministry.FirstOrDefault(m => m.Abbreviation == activity.ContactMinistryAbbreviation);
 
             if (activity.MinistriesSharedWith != null)
             {

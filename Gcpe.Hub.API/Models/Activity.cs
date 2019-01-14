@@ -26,7 +26,7 @@ namespace Gcpe.Hub.API.Models
         public string Comments { get; set; }
         [StringLength(2000)]
         public string LeadOrganization { get; set; }
-        public string ContactMinistryKey { get; set; }
+        public string ContactMinistryAbbreviation { get; set; }
         [StringLength(150)]
         public string Venue { get; set; }
         public string CityName { get; set; }

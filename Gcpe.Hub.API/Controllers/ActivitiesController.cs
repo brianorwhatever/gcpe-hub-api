@@ -32,7 +32,7 @@ namespace Gcpe.Hub.API.Controllers
             this.mapper = mapper;
             if (env?.IsProduction() == false && !mostFutureForecastActivity.HasValue)
             {
-                mostFutureForecastActivity = Forecast(dbContext).Where(a => a.IsActive).OrderByDescending(a => a.StartDateTime).First().StartDateTime;
+                mostFutureForecastActivity = Forecast(dbContext).Where(a => a.IsActive).OrderByDescending(a => a.StartDateTime).First().StartDateTime?.Date;
             }
         }
 
@@ -46,8 +46,8 @@ namespace Gcpe.Hub.API.Controllers
         private IQueryable<Activity> Forecast(HubDbContext dbContext)
         {
             return QueryAll(dbContext)
-                .Where(a => a.IsConfirmed && !a.IsConfidential && //a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-")) &&
-                            a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")));
+                .Where(a => a.IsConfirmed && !a.IsConfidential && a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-1")));
+                             //&& a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")));
         }
 
         [HttpGet("Forecast/{numDays}")]
@@ -63,7 +63,7 @@ namespace Gcpe.Hub.API.Controllers
                 var today = DateTime.Today;
                 if (mostFutureForecastActivity.HasValue)
                 {
-                    today = mostFutureForecastActivity.Value.AddDays(today.DayOfWeek - mostFutureForecastActivity.Value.DayOfWeek - 26 * 7); // 26 weeks before the most future activity for testing with a stale db
+                    today = mostFutureForecastActivity.Value.AddDays(today.DayOfWeek - mostFutureForecastActivity.Value.DayOfWeek - 13 * 7); // 13 weeks before the most future activity for testing with a stale db
                 }
                 forecast = forecast.Where(a => a.StartDateTime >= today && a.StartDateTime < today.AddDays(numDays));
 
