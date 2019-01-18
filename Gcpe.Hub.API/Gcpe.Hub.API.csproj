@@ -5,7 +5,6 @@
     <UserSecretsId>5019c3c6-36d0-47f1-95db-f51b65665dca</UserSecretsId>
     <StartupObject>Gcpe.Hub.API.Program</StartupObject>
     <ProjectGuid>{0BFD800F-E776-4438-801C-7C85CF912D60}</ProjectGuid>
-    <RuntimeFrameworkVersion>2.2.1</RuntimeFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>
