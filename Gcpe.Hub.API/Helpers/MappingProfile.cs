@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.Data.Entity;
 
@@ -10,7 +11,9 @@ namespace Gcpe.Hub.API.Helpers
         {
             CreateMap<Activity, Models.Activity>()
                 .ForMember(dest => dest.MinistriesSharedWith, opt => opt.MapFrom(src => src.ActivitySharedWith.Select(sw => sw.Ministry.Key)))
-                .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)));
+                .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)))
+                .ForMember(dest => dest.StartDateTime, opt => opt.MapFrom(src => DateTime.SpecifyKind((DateTime)src.StartDateTime, DateTimeKind.Local)))
+                .ForMember(dest => dest.EndDateTime, opt => opt.MapFrom(src => DateTime.SpecifyKind((DateTime)src.EndDateTime, DateTimeKind.Local)));
             // use db.Entry(dbActivity).CurrentValues.SetValues() instead of ReverseMap
 
             CreateMap<NewsReleaseDocumentLanguage, Models.Post.Document>();
@@ -23,10 +26,12 @@ namespace Gcpe.Hub.API.Helpers
             CreateMap<NewsReleaseLog, Models.PostLog>() // use db.Entry(dbPostLog).CurrentValues.SetValues() instead of ReverseMap
                 .ForMember(dest => dest.PostKey, opt => opt.MapFrom(src => src.Release.Key));
 
-            CreateMap<Message, Models.Message>();
+            CreateMap<Message, Models.Message>()
+                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.Timestamp, DateTimeKind.Local)));
             // use db.Entry(dbMessage).CurrentValues.SetValues() instead of ReverseMap
 
-            CreateMap<SocialMediaPost, Models.SocialMediaPost>();
+            CreateMap<SocialMediaPost, Models.SocialMediaPost>()
+                .ForMember(dest => dest.Timestamp, opt => opt.MapFrom(src => DateTime.SpecifyKind(src.Timestamp, DateTimeKind.Local)));
         }
     }
 }
