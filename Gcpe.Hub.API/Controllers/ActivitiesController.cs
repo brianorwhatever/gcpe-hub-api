@@ -61,6 +61,10 @@ namespace Gcpe.Hub.API.Controllers
             {
                 IQueryable<Activity> forecast = Forecast(dbContext);
                 var today = DateTime.Today;
+                if (lastModifiedNextCheck.Date != today)
+                {
+                    lastModified = null; // force refresh after midnight
+                }
                 if (mostFutureForecastActivity.HasValue)
                 {
                     today = mostFutureForecastActivity.Value.AddDays(today.DayOfWeek - mostFutureForecastActivity.Value.DayOfWeek - 13 * 7); // 13 weeks before the most future activity for testing with a stale db

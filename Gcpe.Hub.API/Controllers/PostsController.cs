@@ -79,8 +79,14 @@ namespace Gcpe.Hub.API.Controllers
         {
             try
             {
-                IQueryable<NewsRelease> latest = isProduction ? QueryPosts().Where(p => p.PublishDateTime >= DateTime.Today.AddDays(-numDays))
+                var today = DateTime.Today;
+                IQueryable<NewsRelease> latest = isProduction ? QueryPosts().Where(p => p.PublishDateTime >= today.AddDays(-numDays))
                                                               : QueryPosts().OrderByDescending(p => p.PublishDateTime).Take(20); // 20 for testing with a stale db
+
+                if (lastModifiedNextCheck.Date != today)
+                {
+                    lastModified = null; // force refresh after midnight
+                }
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => latest.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp.LocalDateTime);
                 return res ?? Ok(latest.Where(p => p.IsPublished).OrderByDescending(p => p.PublishDateTime).Select(p => p.ToModel(mapper)).ToList());
