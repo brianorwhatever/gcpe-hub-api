@@ -1,7 +1,9 @@
-﻿using AutoMapper;
+﻿using System.Data.SqlClient;
+using AutoMapper;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -85,11 +87,24 @@ namespace Gcpe.Hub.API
                 setupAction.OperationFilter<OperationIdCorrectionFilter>();
             });
 
-            services.AddHealthChecks(checks =>
-            {
-                checks.AddSqlCheck("Gcpe.Hub", Configuration["HubDbContext"]);
-                checks.AddCheck("Webserver is running", () => HealthCheckResult.Healthy("Ok"));
-            });
+            services.AddHealthChecks()
+                .AddCheck("sql", () =>
+                {
+                    using (var connection = new SqlConnection(Configuration["HubDbContext"]))
+                    {
+                        try
+                        {
+                            connection.Open();
+                        }
+                        catch (SqlException)
+                        {
+                            return HealthCheckResult.Unhealthy();
+                        }
+
+                        return HealthCheckResult.Healthy();
+                    }
+                })
+                .AddCheck("Webserver is running", () => HealthCheckResult.Healthy("Ok"));
 
             services.AddCors();
         }
@@ -116,6 +131,8 @@ namespace Gcpe.Hub.API
             {
                 // app.UseHsts();
             }
+
+            app.UseHealthChecks("/hc", new HealthCheckOptions { AllowCachingResponses = false });
 
             // app.UseHttpsRedirection();
 
