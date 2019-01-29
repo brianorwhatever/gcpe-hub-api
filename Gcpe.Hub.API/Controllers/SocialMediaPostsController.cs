@@ -37,7 +37,7 @@ namespace Gcpe.Hub.API.Controllers
                 IQueryable<SocialMediaPost> dbPosts = dbContext.SocialMediaPost;
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => dbPosts.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp);
-                return res ?? Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts.Where(p => p.IsActive).OrderBy(p => p.SortOrder).ToList()));
+                return res ?? Ok(mapper.Map<List<Models.SocialMediaPost>>(dbPosts.Where(p => p.IsActive).OrderBy(p => p.SortOrder).ThenByDescending(p => p.Timestamp).ToList()));
             }
             catch (Exception ex)
             {
