@@ -92,7 +92,7 @@ parameters:
     displayName: Source Image Tag
     description: The tag of the source image.
     required: true
-    value: 2.2-1
+    value: 2.2-2
   - name: DOTNET_STARTUP_PROJECT
     displayName: DotNet Startup Project
     description: The path to the startup project for the .Net application.
