@@ -68,6 +68,7 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 IsConfirmed = true,
                 Id = id,
                 StartDateTime = DateTime.Today.AddDays(3),
+                EndDateTime = DateTime.Today.AddDays(3),
                 ActivityCategories = new List<ActivityCategories>
                 {
                     new ActivityCategories
@@ -75,7 +76,18 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                          ActivityId = id,
                          Category = new Category
                          {
-                            Name = "Release Only (No Event)"
+                            Name = "Approved Release"
+                         }
+                    }
+                },
+                ActivityKeywords = new List<ActivityKeywords>
+                {
+                    new ActivityKeywords
+                    {
+                         ActivityId = id,
+                         Keyword = new Keyword
+                         {
+                            Name = "HQ-1P"
                          }
                     }
                 }
