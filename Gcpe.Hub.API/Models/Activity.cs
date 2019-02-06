@@ -14,6 +14,8 @@ namespace Gcpe.Hub.API.Models
         [Required]
         [StringLength(500)]
         public string Details { get; set; }
+        [StringLength(2000)]
+        public string HqComments { get; set; }
         [Required]
         [StringLength(500)]
         public string Schedule { get; set; }
