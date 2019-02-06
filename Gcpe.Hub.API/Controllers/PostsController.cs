@@ -39,7 +39,7 @@ namespace Gcpe.Hub.API.Controllers
             return dbContext.NewsRelease.Include(p => p.Ministry).Include(p => p.NewsReleaseLanguage).Include(p => p.NewsReleaseMinistry)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentLanguage)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentContact)
-                .Where(p => p.IsCommitted);
+                .Where(p => p.IsCommitted && p.ReleaseType != ReleaseType.Advisory);
         }
         [NonAction]
         public IList<Models.Post> GetResultsPage(NewsReleaseParams newsReleaseParams, out int count)
