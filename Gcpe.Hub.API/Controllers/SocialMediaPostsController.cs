@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -26,6 +27,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = "ReadAccess")]
         [Produces(typeof(IEnumerable<Models.SocialMediaPost>))]
         [ProducesResponseType(304)]
         [ProducesResponseType(400)]
@@ -46,6 +48,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "WriteAccess")]
         [ProducesResponseType(typeof(Models.SocialMediaPost), 201)]
         [ProducesResponseType(400)]
         public IActionResult AddSocialMediaPost(Models.SocialMediaPost socialMediaPost)
@@ -71,6 +74,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpGet("{id}", Name = "GetSocialMediaPost")]
+        [Authorize(Policy = "ReadAccess")]
         [Produces(typeof(Models.SocialMediaPost))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -92,6 +96,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "WriteAccess")]
         [Produces(typeof(Models.SocialMediaPost))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -118,6 +123,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "WriteAccess")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]

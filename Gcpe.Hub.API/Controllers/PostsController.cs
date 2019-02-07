@@ -5,6 +5,7 @@ using System.Linq;
 using AutoMapper;
 using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Gcpe.Hub.API.Controllers
 {
-    // TODO: Re-enable this ==> [Authorize]
     [Route("api/[Controller]")]
     [ApiController]
     [Produces("application/json")]
@@ -121,6 +121,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "WriteAccess")]
         [ProducesResponseType(typeof(Models.Post), 201)]
         [ProducesResponseType(400)]
         public IActionResult AddPost(Models.Post post)
@@ -144,6 +145,7 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         [HttpPut("{key}")]
+        [Authorize(Policy = "WriteAccess")]
         [Produces(typeof(Models.Post))]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]

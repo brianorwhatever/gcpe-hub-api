@@ -11,9 +11,7 @@ namespace Gcpe.Hub.API.IntegrationTests
     {
         private int expectedEntitiesPerPage = 5;
 
-        public PostsPageShould(CustomWebApplicationFactory<Startup> factory) : base(factory)
-        {
-        }
+        public PostsPageShould(CustomWebApplicationFactory<TestStartup> factory) : base(factory) {}
 
         [Fact]
         public async Task ReturnAListOfPosts()

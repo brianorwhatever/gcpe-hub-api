@@ -11,7 +11,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
 {
     public class TestMessagesViews : BaseWebApiTest
     {
-        public TestMessagesViews(CustomWebApplicationFactory<Startup> factory) : base(factory) {}
+        public TestMessagesViews(CustomWebApplicationFactory<TestStartup> factory) : base(factory) {}
 
         private async Task<Models.Message> _PostMessage(string title = "Lorem Title", int sortOrder = 0)
         {

@@ -10,7 +10,7 @@ namespace Gcpe.Hub.API.IntegrationTests.Views
 {
     public class TestSocialMediaViews: BaseWebApiTest
     {
-        public TestSocialMediaViews(CustomWebApplicationFactory<Startup> factory) : base(factory) { }
+        public TestSocialMediaViews(CustomWebApplicationFactory<TestStartup> factory) : base(factory) { }
 
         private async Task<Models.SocialMediaPost> _PostSocialMediaPost(int sortOrder = 0, string url = "http://facebook.com/post/123")
         {

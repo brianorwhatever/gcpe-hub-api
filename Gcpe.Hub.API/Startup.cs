@@ -16,6 +16,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Gcpe.Hub.API.Helpers;
+using System.Collections.Generic;
 
 namespace Gcpe.Hub.API
 {
@@ -38,7 +40,6 @@ namespace Gcpe.Hub.API
             services.AddDbContext<HubDbContext>(options => options.UseSqlServer(Configuration["HubDbContext"])
                 .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning)));
 
-
             services.AddMvc()
                 .AddJsonOptions(opt => {
                     opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -46,38 +47,7 @@ namespace Gcpe.Hub.API
                 })
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(o =>
-            {
-                o.Authority = Configuration["Jwt:Authority"];
-                o.Audience = Configuration["Jwt:Audience"];
-                o.Events = new JwtBearerEvents()
-                {
-                    OnAuthenticationFailed = ctx =>
-                    {
-                        ctx.NoResult();
-
-                        ctx.Response.StatusCode = 500;
-                        ctx.Response.ContentType = "text/plain";
-                        if (Environment.IsDevelopment())
-                        {
-                            return ctx.Response.WriteAsync(ctx.Exception.ToString());
-                        }
-
-                        return ctx.Response.WriteAsync("An error occurred processing your authentication");
-                    }
-                };
-            });
-
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("Administrator", policy => policy.RequireClaim("user_roles", "[Administrators]"));
-            });
-
-
+            this.ConfigureAuth(services);
 
             services.AddSwaggerGen(setupAction =>
             {
@@ -87,6 +57,18 @@ namespace Gcpe.Hub.API
                     Title = "BC Gov Hub API service",
                     Description = "The .Net Core API for the Hub"
                 });
+                setupAction.AddSecurityDefinition("oauth2", new OAuth2Scheme
+                {
+                    Type = "oauth2",
+                    Flow = "implicit",
+                    AuthorizationUrl = Configuration["Jwt:AuthorizationUrl"],
+                    Scopes = new Dictionary<string, string>
+                    {
+                        { "ReadAccess", "Access read operations" },
+                        { "WriteAccess", "Access write operations" }
+                    }
+                });
+                setupAction.OperationFilter<SecurityRequirementsOperationFilter>();
                 setupAction.OperationFilter<OperationIdCorrectionFilter>();
             });
 
@@ -110,6 +92,25 @@ namespace Gcpe.Hub.API
                 .AddCheck("Webserver is running", () => HealthCheckResult.Healthy("Ok"));
 
             services.AddCors();
+        }
+
+        public virtual void ConfigureAuth(IServiceCollection services)
+        {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(o =>
+            {
+                o.Authority = Configuration["Jwt:Authority"];
+                o.Audience = Configuration["Jwt:Audience"];
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ReadAccess", policy => policy.RequireClaim("user_roles", new string[] { "Administrators", "Contributors", "Viewers" }));
+                options.AddPolicy("WriteAccess", policy => policy.RequireClaim("user_roles", new string[] { "Administrators", "Contributors" }));
+            });
         }
 
         private class OperationIdCorrectionFilter : IOperationFilter
@@ -140,7 +141,7 @@ namespace Gcpe.Hub.API
             // app.UseHttpsRedirection();
 
             // temporary CORS fix
-            app.UseCors(opts => opts.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseCors(opts => opts.AllowAnyMethod().AllowAnyHeader().SetIsOriginAllowed((host) => true).AllowCredentials());
 
             app.UseAuthentication();
 

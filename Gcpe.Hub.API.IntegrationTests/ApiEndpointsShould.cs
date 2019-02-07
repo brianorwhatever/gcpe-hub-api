@@ -6,7 +6,7 @@ namespace Gcpe.Hub.API.IntegrationTests
 {
     public class ApiEndpointsShould : BaseWebApiTest
     {
-        public ApiEndpointsShould(CustomWebApplicationFactory<Startup> factory) : base(factory)
+        public ApiEndpointsShould(CustomWebApplicationFactory<TestStartup> factory) : base(factory)
         {
         }
 
