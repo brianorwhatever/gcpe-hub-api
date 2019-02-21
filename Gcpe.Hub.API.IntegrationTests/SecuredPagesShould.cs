@@ -1,17 +1,33 @@
-﻿using System.Net;
+﻿using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace Gcpe.Hub.API.IntegrationTests
 {
     public class SecuredPagesShould : BaseWebApiTest
     {
-        public SecuredPagesShould(CustomWebApplicationFactory<TestStartup> factory) : base(factory) { }
+        private HttpClient client;
+        public SecuredPagesShould(CustomWebApplicationFactory<TestStartup> factory) : base(factory)
+        {
+            string contentRoot = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.GetDirectories("Gcpe.Hub.Api")[0].FullName;
+            var configBuilder = new ConfigurationBuilder()
+                .SetBasePath(contentRoot)
+                .AddJsonFile("appsettings.json");
+            client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder
+                .ConfigureAppConfiguration(c => c.AddConfiguration(configBuilder.Build()))
+                .UseContentRoot(contentRoot)
+                .UseStartup<Startup>();
+            }).CreateClient();
+        }
 
         [Theory]
         [InlineData("/api/messages", "POST")]
@@ -26,14 +42,6 @@ namespace Gcpe.Hub.API.IntegrationTests
         [InlineData("/api/socialmediaposts/123", "DELETE")]
         public async Task RequireAnAuthenticatedUser(string url, string requestType)
         {
-            var client = _factory.WithWebHostBuilder(builder =>
-            {
-                builder.UseStartup<Startup>();
-            }).CreateClient();
-            //var builder = new WebHostBuilder().UseStartup<Startup>();
-
-            //var testServer = new TestServer(builder);
-            //var client = testServer.CreateClient();
             var content = new StringContent("test");
 
             var response = new HttpResponseMessage();
@@ -58,11 +66,6 @@ namespace Gcpe.Hub.API.IntegrationTests
         [InlineData("/api/posts/latest/7")]
         public async Task NotRequireAnAuthenticatedUser(string url)
         {
-            var client = _factory.WithWebHostBuilder(builder =>
-            {
-                builder.UseStartup<Startup>();
-            }).CreateClient();
-
             var response = await client.GetAsync(url);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);

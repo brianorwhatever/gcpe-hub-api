@@ -13,7 +13,7 @@ namespace Gcpe.Hub.API.IntegrationTests
         protected override IWebHostBuilder CreateWebHostBuilder()
         {
             return WebHost.CreateDefaultBuilder()
-            .UseStartup<TestStartup>();
+                .UseStartup<TestStartup>();
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)

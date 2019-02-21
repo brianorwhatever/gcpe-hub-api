@@ -1,11 +1,14 @@
-﻿using System.Data.SqlClient;
+﻿using System.Collections.Generic;
+using System.Data.SqlClient;
 using AutoMapper;
+using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +19,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using Gcpe.Hub.API.Helpers;
-using System.Collections.Generic;
 
 namespace Gcpe.Hub.API
 {
@@ -40,6 +41,8 @@ namespace Gcpe.Hub.API
             services.AddDbContext<HubDbContext>(options => options.UseSqlServer(Configuration["HubDbContext"])
                 .ConfigureWarnings(warnings => warnings.Throw(RelationalEventId.QueryClientEvaluationWarning)));
 
+            this.ConfigureAuth(services);
+
             services.AddMvc()
                 .AddJsonOptions(opt => {
                     opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
@@ -47,7 +50,6 @@ namespace Gcpe.Hub.API
                 })
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            this.ConfigureAuth(services);
 
             services.AddSwaggerGen(setupAction =>
             {
@@ -61,11 +63,12 @@ namespace Gcpe.Hub.API
                 {
                     Type = "oauth2",
                     Flow = "implicit",
-                    AuthorizationUrl = Configuration["Jwt:AuthorizationUrl"],
+                    AuthorizationUrl = Configuration["AzureAd:AuthorizationUrl"],
                     Scopes = new Dictionary<string, string>
                     {
-                        { "ReadAccess", "Access read operations" },
-                        { "WriteAccess", "Access write operations" }
+                        { "openid", "openid login scope" },
+                        { "profile", "profile scope" },
+                        { "email", "email scope" },
                     }
                 });
                 setupAction.OperationFilter<SecurityRequirementsOperationFilter>();
@@ -96,21 +99,23 @@ namespace Gcpe.Hub.API
 
         public virtual void ConfigureAuth(IServiceCollection services)
         {
-            services.AddAuthentication(options =>
+            services.AddAuthentication(AzureADDefaults.BearerAuthenticationScheme)
+                .AddAzureADBearer(options => Configuration.Bind("AzureAd", options));
+                
+            services.Configure<JwtBearerOptions>(AzureADDefaults.JwtBearerAuthenticationScheme, options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(o =>
-            {
-                o.Authority = Configuration["Jwt:Authority"];
-                o.Audience = Configuration["Jwt:Audience"];
+                options.Authority = options.Authority + "/v2.0/";
+                options.TokenValidationParameters.ValidAudiences = new string[] { options.Audience, $"api://{options.Audience}" };
+                options.TokenValidationParameters.IssuerValidator = AadIssuerValidator.ValidateAadIssuer;
             });
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("ReadAccess", policy => policy.RequireClaim("user_roles", new string[] { "Administrators", "Contributors", "Viewers" }));
-                options.AddPolicy("WriteAccess", policy => policy.RequireClaim("user_roles", new string[] { "Administrators", "Contributors" }));
+                options.AddPolicy("ReadAccess", policy => policy.RequireRole("Viewer", "Contributor"));
+                options.AddPolicy("WriteAccess", policy => policy.RequireRole("Contributor"));
             });
+
+
         }
 
         private class OperationIdCorrectionFilter : IOperationFilter
@@ -150,6 +155,7 @@ namespace Gcpe.Hub.API
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
+                c.OAuthClientId(Configuration["AzureAd:ClientId"]);
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "BC Gov Hub API service");
             });
         }
