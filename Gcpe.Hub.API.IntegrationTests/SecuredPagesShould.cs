@@ -16,15 +16,9 @@ namespace Gcpe.Hub.API.IntegrationTests
         private HttpClient client;
         public SecuredPagesShould(CustomWebApplicationFactory<TestStartup> factory) : base(factory)
         {
-            string contentRoot = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.GetDirectories("Gcpe.Hub.Api")[0].FullName;
-            var configBuilder = new ConfigurationBuilder()
-                .SetBasePath(contentRoot)
-                .AddJsonFile("appsettings.json");
             client = _factory.WithWebHostBuilder(builder =>
             {
                 builder
-                .ConfigureAppConfiguration(c => c.AddConfiguration(configBuilder.Build()))
-                .UseContentRoot(contentRoot)
                 .UseStartup<Startup>();
             }).CreateClient();
         }
