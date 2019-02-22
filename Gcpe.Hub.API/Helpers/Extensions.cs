@@ -33,7 +33,7 @@ namespace Gcpe.Hub.API.Helpers
             var documents = new List<Models.Post.Document>();
             foreach (var document in dbPost.NewsReleaseDocument.OrderBy(e => e.SortIndex))
             {
-                foreach (var documentLanguage in document.NewsReleaseDocumentLanguage)
+                foreach (var documentLanguage in document.NewsReleaseDocumentLanguage.OrderBy(l => l.LanguageId != Language.enCA)) // English first
                 {
                     var documentModel = mapper.Map<Models.Post.Document>(documentLanguage);
                     var contacts = new List<Models.Post.Document.DocumentContact>();
