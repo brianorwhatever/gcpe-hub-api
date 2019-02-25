@@ -7,6 +7,7 @@ using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -85,7 +86,7 @@ namespace Gcpe.Hub.API.Controllers
 
                 if (lastModifiedNextCheck.Date != today)
                 {
-                    lastModified = null; // force refresh after midnight
+                    Request.GetTypedHeaders().IfModifiedSince = null; // force refresh after midnight
                 }
 
                 IActionResult res = HandleModifiedSince(ref lastModified, ref lastModifiedNextCheck, () => latest.OrderByDescending(p => p.Timestamp).FirstOrDefault()?.Timestamp.LocalDateTime);

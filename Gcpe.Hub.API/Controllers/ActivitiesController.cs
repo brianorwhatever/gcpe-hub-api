@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
+using Gcpe.Hub.API.Helpers;
 using Gcpe.Hub.Data.Entity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Gcpe.Hub.API.Helpers;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Gcpe.Hub.API.Controllers
 {
@@ -64,7 +65,7 @@ namespace Gcpe.Hub.API.Controllers
                 var today = DateTime.Today;
                 if (lastModifiedNextCheck.Date != today)
                 {
-                    lastModified = null; // force refresh after midnight
+                    Request.GetTypedHeaders().IfModifiedSince = null; // force refresh after midnight
                 }
                 if (mostFutureForecastActivity.HasValue)
                 {
