@@ -39,7 +39,7 @@ namespace Gcpe.Hub.API.Controllers
             return dbContext.NewsRelease.Include(p => p.Ministry).Include(p => p.NewsReleaseLanguage).Include(p => p.NewsReleaseMinistry)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentLanguage)
                 .Include(p => p.NewsReleaseDocument).ThenInclude(nrd => nrd.NewsReleaseDocumentContact)
-                .Where(p => p.IsCommitted && p.ReleaseType != ReleaseType.Advisory);
+                .Where(p => p.IsCommitted);
         }
         [NonAction]
         public IList<Models.Post> GetResultsPage(NewsReleaseParams newsReleaseParams, out int count)
@@ -80,8 +80,8 @@ namespace Gcpe.Hub.API.Controllers
             try
             {
                 var today = DateTime.Today;
-                IQueryable<NewsRelease> latest = isProduction ? QueryPosts().Where(p => p.PublishDateTime >= today.AddDays(-numDays))
-                                                              : QueryPosts().OrderByDescending(p => p.PublishDateTime).Take(20); // 20 for testing with a stale db
+                IQueryable<NewsRelease> latest = isProduction ? QueryPosts().Where(p => p.ReleaseType <= ReleaseType.Story && p.PublishDateTime >= today.AddDays(-numDays)) // Releases or Stories
+                                                              : QueryPosts().Where(p => p.ReleaseType <= ReleaseType.Story).OrderByDescending(p => p.PublishDateTime).Take(20); // 20 for testing with a stale db
 
                 if (lastModifiedNextCheck.Date != today)
                 {
