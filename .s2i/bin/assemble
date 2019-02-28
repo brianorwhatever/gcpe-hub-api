@@ -138,8 +138,10 @@ dotnet restore "$DOTNET_STARTUP_PROJECT" $RESTORE_OPTIONS
 if [ -n "$SONAR_TOKEN" ]; then
 	echo "---> Running SonarQube Scan..."
   	dotnet tool install --global dotnet-sonarscanner
-  	dotnet sonarscanner begin /d:sonar.login=$SONAR_TOKEN /k:"$SONAR_PROJECT" /d:sonar.host.url=$SONAR_URL
+  	dotnet sonarscanner begin /d:sonar.login=$SONAR_TOKEN /k:"$SONAR_PROJECT" /d:sonar.host.url=$SONAR_URL /d:sonar.cs.vscoveragexml.reportsPaths="%CD%\VisualStudio.coveragexml"
   	dotnet build "$DOTNET_STARTUP_PROJECT" -f "$DOTNET_FRAMEWORK" -c "$DOTNET_CONFIGURATION"
+    "%VSINSTALLDIR%\Team Tools\Dynamic Code Coverage Tools\CodeCoverage.exe" collect /output:"%CD%\VisualStudio.coverage" "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe" ".\Gcpe.Hub.API.Tests\bin\Debug\netcoreapp2.2\Gcpe.Hub.API.Tests\bin\Debug\netcoreapp2.2UnitTestProject1\bin\Debug\Gcpe.Hub.API.Tests.dll"
+    "%VSINSTALLDIR%\Team Tools\Dynamic Code Coverage Tools\CodeCoverage.exe" analyze /output:"%CD%\VisualStudio.coveragexml" "%CD%\VisualStudio.coverage"
   	dotnet sonarscanner end /d:sonar.login=$SONAR_TOKEN
 elif [ -n "$SNYK_TOKEN" ]; then
 	# Run the snyk scan.  Note SNYK_TOKEN is automatically used by the snyk scanner for authentication.
