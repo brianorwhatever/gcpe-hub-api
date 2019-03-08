@@ -16,3 +16,9 @@ spec:
         image: bcgovnewsdashboard.azurecr.io/hackathon-gcpe-hub-api:latest
         ports:
           - containerPort: 80
+        env:
+        - name: HubDbContext
+          valueFrom:
+            secretKeyRef:
+              name: db-user-pass
+              key: password.txt
