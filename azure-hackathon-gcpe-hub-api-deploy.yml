@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gcpe-hub-api-deployment
+  labels:
+    app: gcpe-hub-api
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gcpe-hub-api
+    spec:
+      containers:
+      - name: hackathon-gcpe-hub-api
+        image: bcgovnewsdashboard.azurecr.io/hackathon-gcpe-hub-api:latest
+        ports:
+          - containerPort: 80
