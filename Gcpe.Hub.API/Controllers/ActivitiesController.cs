@@ -48,7 +48,6 @@ namespace Gcpe.Hub.API.Controllers
         {
             return QueryAll(dbContext)
                 .Where(a => a.IsConfirmed && !a.IsConfidential && a.ActivityKeywords.Any(ak => ak.Keyword.Name.StartsWith("HQ-1")));
-                             //&& a.ActivityCategories.Any(ac => ac.Category.Name.StartsWith("Approved") || ac.Category.Name == "Release Only (No Event)" || ac.Category.Name.EndsWith("with Release")));
         }
 
         [HttpGet("Forecast/{numDays}")]

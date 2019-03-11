@@ -18,8 +18,6 @@ namespace Gcpe.Hub.API.Helpers
 
             CreateMap<NewsRelease, Models.Post>()
                 .ForMember(dest => dest.Kind, opt => opt.MapFrom(src => src.ReleaseType));
-            //.ForMember(dest => dest.NewsReleaseLanguage, opt => opt.MapFrom(src => src.Summary))
-            //.ForMember(dest => dest.NewsReleaseMinistry, opt => opt.MapFrom(src => src.MinistriesSharedWith));
 
             CreateMap<NewsReleaseLog, Models.PostLog>() // use db.Entry(dbPostLog).CurrentValues.SetValues() instead of ReverseMap
                 .ForMember(dest => dest.PostKey, opt => opt.MapFrom(src => src.Release.Key));
