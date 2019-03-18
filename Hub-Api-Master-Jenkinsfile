@@ -8,17 +8,22 @@ node('master') {
         echo "Running Snyk analysis of dependencies"
         openshiftBuild bldCfg: 'hub-api-snyk-master', showBuildLogs: 'true'
     }
-    
+
     stage('Build Image') {
         echo "Building..."
         openshiftBuild bldCfg: 'hub-api-master', showBuildLogs: 'true'
-        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api', srcTag: 'latest'
-    } 
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'MASTER-$BUILD_ID', srcStream: 'hub-api', srcTag: 'latest'
+    }
+
+    stage('Deploy on Test') {
+        echo "Deploying to test..."
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: 'MASTER-$BUILD_ID'
+    }
 }
 
 stage('Deploy on Prod') {
     input "Deploy to Prod?"
     node('master') {
-        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'prod', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'prod', srcStream: 'hub-api', srcTag: 'MASTER-$BUILD_ID'
     }
 }
