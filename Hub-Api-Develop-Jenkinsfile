@@ -8,10 +8,12 @@ node('master') {
     stage('Deploy on Dev') {
         echo "Deploying to dev..."
         openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'dev', srcStream: 'hub-api', srcTag: '$BUILD_ID'
-    }   
+    }
 
-    stage('Deploy on Test') {
-        input "Deploy to test?"
-	    openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: '$BUILD_ID'
-	}
+    timeout(600) {
+        stage('Deploy on Test') {
+            input "Deploy to test?"
+          openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+      }
+    }
 }

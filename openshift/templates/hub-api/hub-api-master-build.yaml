@@ -42,7 +42,7 @@ objects:
       output:
         to:
           kind: ImageStreamTag
-          name: "${NAME}:latest"
+          name: "${NAME}:master"
       resources:
         requests:
           cpu: "${CPU_REQUEST}"
