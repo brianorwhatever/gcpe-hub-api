@@ -2,18 +2,18 @@ node('master') {
     stage('Build Image') {
         echo "Building..."
         openshiftBuild bldCfg: 'hub-api-develop', showBuildLogs: 'true'
-        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: '$BUILD_ID', srcStream: 'hub-api-develop', srcTag: 'latest'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'DEVELOP-$BUILD_ID', srcStream: 'hub-api-develop', srcTag: 'latest'
     }
 
     stage('Deploy on Dev') {
         echo "Deploying to dev..."
-        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'dev', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'dev', srcStream: 'hub-api', srcTag: 'DEVELOP-$BUILD_ID'
     }
 
     timeout(600) {
         stage('Deploy on Test') {
             input "Deploy to test?"
-          openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: '$BUILD_ID'
+          openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'test', srcStream: 'hub-api', srcTag: 'DEVELOP-$BUILD_ID'
       }
     }
 }
