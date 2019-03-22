@@ -42,7 +42,7 @@ objects:
       output:
         to:
           kind: ImageStreamTag
-          name: "${NAME}:master"
+          name: "${NAME}:latest"
       resources:
         requests:
           cpu: "${CPU_REQUEST}"
@@ -56,7 +56,7 @@ parameters:
     description:
       The name assigned to all of the resources defined in this template.
     required: true
-    value: hub-api
+    value: hub-api-master
   - name: GIT_REPO_URL
     displayName: Git Repository URL
     description: The URL of the repository with your application source code.

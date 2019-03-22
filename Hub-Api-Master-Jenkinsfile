@@ -12,7 +12,7 @@ node('master') {
     stage('Build Image') {
         echo "Building..."
         openshiftBuild bldCfg: 'hub-api-master', showBuildLogs: 'true'
-        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'MASTER-$BUILD_ID', srcStream: 'hub-api', srcTag: 'master'
+        openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'MASTER-$BUILD_ID', srcStream: 'hub-api-master', srcTag: 'latest'
     }
 
     stage('Deploy on Test') {
@@ -25,7 +25,7 @@ timeout(600) {
   stage('Deploy on Prod') {
       input "Deploy to Prod?"
       node('master') {
-          openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'prod', srcStream: 'hub-api', srcTag: 'MASTER-$BUILD_ID'
+          openshiftTag destStream: 'hub-api', verbose: 'true', destTag: 'prod', srcStream: 'hub-api', srcTag: 'test'
       }
   }
 }
