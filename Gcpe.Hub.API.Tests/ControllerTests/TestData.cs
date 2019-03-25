@@ -121,5 +121,27 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 IsActive = isActive
             };
         }
+
+        public static Ministry CreateDbMinistries(string displayName, Guid? id = null, string key = "", bool isActive = true, int sortOrder = 0)
+        {
+            return new Ministry
+            {
+                Id = id ?? Guid.Empty,
+                Key = key,
+                DisplayName = displayName,
+                SortOrder = sortOrder,
+                Timestamp = DateTime.Now,
+                IsActive = isActive
+            };
+        }
+
+        public static UserMinistryPreference CreateUserMinistryPreference()
+        {
+            return new UserMinistryPreference
+            {
+                Email = "test@gov.bc.ca",
+                Ministry = new Ministry { Id = Guid.NewGuid(), Key = "fake-ministry", DisplayName = "Fake Ministry" }
+            };
+        }
     }
 }
