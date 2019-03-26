@@ -30,7 +30,6 @@ namespace Gcpe.Hub.API.Controllers
         [Authorize(Policy = "ReadAccess")]
         [Produces(typeof(string[]))]
         [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
         [ResponseCache(Duration = 5)]
         public IActionResult GetUserMinistryPreferences()
         {
@@ -41,7 +40,7 @@ namespace Gcpe.Hub.API.Controllers
                 if (dbUserMinistryPrefs.Any())
                     return Ok(dbUserMinistryPrefs.Select(p => p.Ministry.Key).ToList());
 
-                return NotFound($"Could not find preferences for user with email address: {email}");
+                return Ok(dbUserMinistryPrefs);
             }
             catch (Exception ex)
             {
