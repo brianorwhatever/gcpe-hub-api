@@ -135,11 +135,11 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             };
         }
 
-        public static UserMinistryPreference CreateUserMinistryPreference()
+        public static UserMinistryPreference CreateUserMinistryPreference(string email = null)
         {
             return new UserMinistryPreference
             {
-                Email = "test@gov.bc.ca",
+                Email = email ?? "test@gov.bc.ca",
                 Ministry = new Ministry { Id = Guid.NewGuid(), Key = "fake-ministry", DisplayName = "Fake Ministry" }
             };
         }

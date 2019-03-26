@@ -11,6 +11,7 @@ namespace Gcpe.Hub.API.Helpers
         {
             CreateMap<Activity, Models.Activity>()
                 .ForMember(dest => dest.MinistriesSharedWith, opt => opt.MapFrom(src => src.ActivitySharedWith.Select(sw => sw.Ministry.Key)))
+                .ForMember(dest => dest.ContactMinistryKey, opt => opt.MapFrom(src => src.ContactMinistry.Key))
                 .ForMember(dest => dest.Categories, opt => opt.MapFrom(src => src.ActivityCategories.Select(ac => ac.Category.Name)));
             // use db.Entry(dbActivity).CurrentValues.SetValues() instead of ReverseMap
 

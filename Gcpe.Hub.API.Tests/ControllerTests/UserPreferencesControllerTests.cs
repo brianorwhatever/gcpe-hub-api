@@ -24,6 +24,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
         private UserPreferencesController controller;
         private IMapper mapper;
         private DbContextOptions<HubDbContext> options;
+        private HttpContext httpContext;
+        private ControllerContext controllerContext;
 
         public UserPreferencesControllerTests()
         {
@@ -37,45 +39,28 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
                 cfg.AddProfile(new MappingProfile());
             });
             mapper = mockMapper.CreateMapper();
+
+            httpContext = new DefaultHttpContext();
+            controllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext,
+            };
             controller = new UserPreferencesController(context, logger.Object, mapper);
+            controller.ControllerContext = controllerContext;
         }
 
         [Fact]
         public void Get_ShouldReturnSuccess()
         {
-            var testDbUserMinistryPreference = TestData.CreateUserMinistryPreference();
+            var email = "test@gov.bc.ca";
+            var testDbUserMinistryPreference = TestData.CreateUserMinistryPreference(email);
             context.UserMinistryPreference.Add(testDbUserMinistryPreference);
             context.SaveChanges();
 
-            var httpContext = new DefaultHttpContext();
-            var controllerContext = new ControllerContext()
-            {
-                HttpContext = httpContext,
-            };
-            controller.ControllerContext = controllerContext;
-
-            var payload = new Dictionary<string, object>
-            {
-                { "preferred_username", "test@gov.bc.ca" },
-                { "sub", "1234567890" },
-                { "name", "Test User" },
-                { "jti", Guid.NewGuid() },
-                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
-            };
-            const string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-
-            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
-            IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
-
-            var token = encoder.Encode(payload, secret);
-
+            var token = generateToken(TokenType.Valid, email, "Test User");
             controller.Request.Headers["Authorization"] = $"Bearer {token}";
 
-            var result = controller.GetUserMinistryPreferences(false) as ObjectResult;
-
+            var result = controller.GetUserMinistryPreferences() as ObjectResult;
             result.Should().BeOfType<OkObjectResult>();
             result.StatusCode.Should().Be(200);
             result.Value.Should().BeOfType<List<string>>();
@@ -88,35 +73,10 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             context.UserMinistryPreference.Add(testDbUserMinistryPreference);
             context.SaveChanges();
 
-            var httpContext = new DefaultHttpContext();
-            var controllerContext = new ControllerContext()
-            {
-                HttpContext = httpContext,
-            };
-            controller.ControllerContext = controllerContext;
-
-            var payload = new Dictionary<string, object>
-            {
-                { "preferred_username", "no_prefs@gov.bc.ca" },
-                { "sub", "1234567890" },
-                { "name", "No Prefs User" },
-                { "jti", Guid.NewGuid() },
-                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
-            };
-            const string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-
-            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
-            IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
-
-            var token = encoder.Encode(payload, secret);
-
+            var token = generateToken(TokenType.Valid, "no_prefs@gov.bc.ca", "No Prefs User");
             controller.Request.Headers["Authorization"] = $"Bearer {token}";
 
-            var result = controller.GetUserMinistryPreferences(false) as ObjectResult;
-
+            var result = controller.GetUserMinistryPreferences() as ObjectResult;
             result.Should().BeOfType<NotFoundObjectResult>();
             result.StatusCode.Should().Be(404);
         }
@@ -128,37 +88,13 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             context.UserMinistryPreference.Add(testDbUserMinistryPreference);
             context.SaveChanges();
 
-            var httpContext = new DefaultHttpContext();
-            var controllerContext = new ControllerContext()
-            {
-                HttpContext = httpContext,
-            };
-            controller.ControllerContext = controllerContext;
+            var token = generateToken(TokenType.Invalid);
+            controller.Request.Headers["Authorization"] = $"Bearer {token}";
 
-            var payload = new Dictionary<string, object>
-            {
-                { "sub", "1234567890" },
-                { "jti", Guid.NewGuid() },
-                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
-            };
-            const string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-
-            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
-            IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
-
-            var invalidToken = encoder.Encode(payload, secret);
-
-            controller.Request.Headers["Authorization"] = $"Bearer {invalidToken}";
-
-            var result = controller.GetUserMinistryPreferences(false) as ObjectResult;
-
+            var result = controller.GetUserMinistryPreferences() as ObjectResult;
             result.Should().BeOfType<BadRequestObjectResult>();
             result.StatusCode.Should().Be(400);
         }
-
 
         [Fact]
         public void Post_ShouldReturnSuccess()
@@ -167,35 +103,10 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             context.Ministry.Add(testDbMinistry);
             context.SaveChanges();
 
-            var httpContext = new DefaultHttpContext();
-            var controllerContext = new ControllerContext()
-            {
-                HttpContext = httpContext,
-            };
-            controller.ControllerContext = controllerContext;
-
-            var payload = new Dictionary<string, object>
-            {
-                { "preferred_username", "test@gov.bc.ca" },
-                { "sub", "1234567890" },
-                { "name", "Test User" },
-                { "jti", Guid.NewGuid() },
-                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
-            };
-            const string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-
-            IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
-            IJsonSerializer serializer = new JsonNetSerializer();
-            IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-            IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
-
-            var token = encoder.Encode(payload, secret);
-
+            var token = generateToken(TokenType.Valid, "test@gov.bc.ca", "Test User");
             controller.Request.Headers["Authorization"] = $"Bearer {token}";
 
             var result = controller.AddUserMinistryPreference(new string[] { "fake-ministry" }) as ObjectResult;
-
             result.Should().BeOfType<CreatedAtRouteResult>();
             result.StatusCode.Should().Be(201);
         }
@@ -207,35 +118,56 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             context.Ministry.Add(testDbMinistry);
             context.SaveChanges();
 
-            var httpContext = new DefaultHttpContext();
-            var controllerContext = new ControllerContext()
-            {
-                HttpContext = httpContext,
-            };
-            controller.ControllerContext = controllerContext;
+            var token = generateToken(TokenType.Invalid);
+            controller.Request.Headers["Authorization"] = $"Bearer {token}";
 
-            var payload = new Dictionary<string, object>
-            {
-                { "sub", "1234567890" },
-                { "jti", Guid.NewGuid() },
-                { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
-                { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
-            };
+            var result = controller.AddUserMinistryPreference(new string[] { "fake-ministry" }) as ObjectResult;
+            result.Should().BeOfType<BadRequestObjectResult>();
+            result.StatusCode.Should().Be(400);
+        }
+
+
+        private string generateToken(TokenType tokenType, string email = null, string username = null)
+        {
+            string token = "";
             const string secret = "GQDstcKsx0NHjPOuXOYg5MbeJ1XT0uFiwDVvVBrk";
-
             IJwtAlgorithm algorithm = new HMACSHA256Algorithm();
             IJsonSerializer serializer = new JsonNetSerializer();
             IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
             IJwtEncoder encoder = new JwtEncoder(algorithm, serializer, urlEncoder);
 
-            var token = encoder.Encode(payload, secret);
+            switch (tokenType)
+            {
+                case TokenType.Valid:
+                    token = encoder.Encode(new Dictionary<string, object>
+                    {
+                        { "preferred_username", email},
+                        { "sub", "1234567890" },
+                        { "name", username },
+                        { "jti", Guid.NewGuid() },
+                        { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                        { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
+                    }, secret);
+                    break;
+                case TokenType.Invalid:
+                    token = encoder.Encode(new Dictionary<string, object>
+                    {
+                        { "sub", "1234567890" },
+                        { "jti", Guid.NewGuid() },
+                        { "iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                        { "exp", DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds() }
+                     }, secret);
+                    break;
+                default:
+                    break;
+            }
+            return token;
+        }
 
-            controller.Request.Headers["Authorization"] = $"Bearer {token}";
-
-            var result = controller.AddUserMinistryPreference(new string[] { "fake-ministry" }) as ObjectResult;
-
-            result.Should().BeOfType<BadRequestObjectResult>();
-            result.StatusCode.Should().Be(400);
+        private enum TokenType
+        {
+            Valid,
+            Invalid
         }
     }
 }

@@ -29,6 +29,7 @@ namespace Gcpe.Hub.API.Models
         [StringLength(2000)]
         public string LeadOrganization { get; set; }
         public string ContactMinistryAbbreviation { get; set; }
+        public string ContactMinistryKey { get; set; }
         [StringLength(150)]
         public string Venue { get; set; }
         public string CityName { get; set; }
@@ -40,7 +41,6 @@ namespace Gcpe.Hub.API.Models
         public bool IsAllDay { get; set; }
         public DateTime? NrDateTime { get; set; }
         public DateTime? LastUpdatedDateTime { get; set; }
-
         public ICollection<string> Categories { get; set; }
         public ICollection<string> MinistriesSharedWith { get; set; }
     }
