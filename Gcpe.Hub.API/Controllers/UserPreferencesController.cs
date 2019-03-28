@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Extensions.Configuration;
 
 namespace Gcpe.Hub.API.Controllers
 {
@@ -19,9 +20,11 @@ namespace Gcpe.Hub.API.Controllers
     {
         private readonly HubDbContext dbContext;
         private readonly IMapper mapper;
+        private readonly IConfiguration configuration;
 
-        public UserPreferencesController(HubDbContext dbContext, ILogger<UserPreferencesController> logger, IMapper mapper) : base(logger)
+        public UserPreferencesController(HubDbContext dbContext, ILogger<UserPreferencesController> logger, IMapper mapper, IConfiguration Configuration) : base(logger)
         {
+            this.configuration = Configuration;
             this.dbContext = dbContext;
             this.mapper = mapper;
         }
@@ -79,8 +82,17 @@ namespace Gcpe.Hub.API.Controllers
         }
 
         private string GetEmailAddressFromAuthorizationHeader(StringValues authorizationHeader)
-            => new JwtSecurityToken(
-                authorizationHeader.FirstOrDefault().Split(' ')[1])?.Claims
-                    .First(claim => claim.Type == "preferred_username").Value; // the preferred_username claim will differ depending on the auth provider
+        {
+            return new JwtSecurityToken(
+                           authorizationHeader.FirstOrDefault().Split(' ')[1])?.Claims
+                               .First(claim => claim.Type == GetJwtEmailHeaderKey()).Value;
+        }
+
+        private string GetJwtEmailHeaderKey()
+        {
+            string authType = configuration["AuthType"];
+            return configuration[$"{authType}:JwtEmailField"] != null ? configuration[$"{authType}:JwtEmailField"] : "preferred_username";
+
+        }
     }
 }

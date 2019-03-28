@@ -14,14 +14,26 @@ namespace Gcpe.Hub.API.IntegrationTests
         {
         }
 
-        public override void ConfigureAuth(IServiceCollection services)
+        public override void ConfigureAzureAuth(IServiceCollection services)
         {
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = "Test Scheme";
                 options.DefaultChallengeScheme = "Test Scheme";
             }).AddTestAuth(o => { });
+        }
 
+        public override void ConfigureKeycloakAuth(IServiceCollection services)
+        {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = "Test Scheme";
+                options.DefaultChallengeScheme = "Test Scheme";
+            }).AddTestAuth(o => { });
+        }
+
+        public override void ConfigureAuthorizationPolicies(IServiceCollection services)
+        {
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("ReadAccess", policy => { policy.RequireAssertion(p => { return true; }); });

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Xunit;
 
@@ -45,7 +46,8 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             {
                 HttpContext = httpContext,
             };
-            controller = new UserPreferencesController(context, logger.Object, mapper);
+            var config = new ConfigurationBuilder().Build();
+            controller = new UserPreferencesController(context, logger.Object, mapper, config);
             controller.ControllerContext = controllerContext;
         }
 
@@ -64,21 +66,6 @@ namespace Gcpe.Hub.API.Tests.ControllerTests
             result.Should().BeOfType<OkObjectResult>();
             result.StatusCode.Should().Be(200);
             result.Value.Should().BeOfType<List<string>>();
-        }
-
-        [Fact]
-        public void Get_ShouldReturnNotFound()
-        {
-            var testDbUserMinistryPreference = TestData.CreateUserMinistryPreference();
-            context.UserMinistryPreference.Add(testDbUserMinistryPreference);
-            context.SaveChanges();
-
-            var token = generateToken(TokenType.Valid, "no_prefs@gov.bc.ca", "No Prefs User");
-            controller.Request.Headers["Authorization"] = $"Bearer {token}";
-
-            var result = controller.GetUserMinistryPreferences() as ObjectResult;
-            result.Should().BeOfType<NotFoundObjectResult>();
-            result.StatusCode.Should().Be(404);
         }
 
         [Fact]
